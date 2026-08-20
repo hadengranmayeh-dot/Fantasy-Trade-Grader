@@ -1,331 +1,239 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My PPR Fantasy Trade Grader</title>
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fantasy Trade Grader</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#0b1020;color:#f5f7ff;font-family:Arial,Helvetica,sans-serif}
-.container{max-width:1100px;margin:auto;padding:24px 16px 50px}
-header{text-align:center;margin-bottom:18px}
-h1{font-size:40px;margin:6px 0}
-.muted{color:#aab4ce}
-.nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:20px 0}
-button{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer}
-.nav button{background:#1a2440;color:#fff;border:1px solid #33405f}
-.nav button.active,.grade-btn{background:#6d5dfc;color:#fff}
-.card{background:#141b30;border:1px solid #293354;border-radius:18px;padding:20px;box-shadow:0 12px 30px rgba(0,0,0,.22)}
-.teams{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.search-wrap{position:relative;margin-bottom:9px}
-input{width:100%;padding:13px 14px;border-radius:10px;border:1px solid #35415f;background:#0e1528;color:#fff;font-size:15px}
-.suggestions{position:absolute;left:0;right:0;top:51px;z-index:20;background:#10182b;border:1px solid #35415f;border-radius:10px;overflow:hidden;display:none;box-shadow:0 12px 25px rgba(0,0,0,.35)}
-.suggestion{padding:11px 13px;border-bottom:1px solid #27324d;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
-.suggestion:hover{background:#1d2847}
-.selected{display:flex;align-items:center;justify-content:space-between;background:#0e1528;border:1px solid #35415f;border-radius:10px;padding:10px 12px;margin-bottom:8px}
-.remove{background:transparent;color:#aab4ce;font-size:20px;padding:2px 7px}
-.remove:hover{color:#fff}
-.add{width:100%;background:#26324f;color:#fff}
-.grade-btn{width:100%;margin-top:20px;font-size:18px}
-.results{display:none;margin-top:22px}
-.grades{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.grade{text-align:center;padding:24px;background:#0e1528;border:1px solid #293354;border-radius:16px}
-.letter{font-size:60px;font-weight:900;margin:8px}
-.winner{margin-top:18px;padding:18px;background:#1d2847;border-radius:14px;text-align:center;font-size:20px;font-weight:700}
-.tab{display:none} .tab.active{display:block}
-.rank-tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.rank-tools input{max-width:380px}
-.filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px}
-.filters button{background:#1a2440;color:#fff;padding:8px 12px;font-size:13px}
-.filters button.active{background:#6d5dfc}
-.rankings{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.rank-card{background:#0e1528;border:1px solid #293354;border-radius:12px;overflow:hidden}
-.rank-head{padding:11px 13px;background:#18213a;font-weight:800}
-.rank-row{display:grid;grid-template-columns:42px 1fr 60px;gap:8px;padding:9px 12px;border-top:1px solid #222d48}
-.rank-num{color:#8995b3}
-.rank-value{text-align:right;font-weight:800}
-.no-value{color:#8995b3}
-.note{margin-top:15px;font-size:13px;line-height:1.5;color:#aab4ce}
-@media(max-width:700px){h1{font-size:32px}.teams,.grades,.rankings{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<div class="container">
-<header>
-<div style="font-size:32px">🏈</div>
-<h1>Fantasy Trade Grader</h1>
-<div class="muted">Your custom PPR rankings power the trade analyzer.</div>
-</header>
+body{margin:0;background:#0b1020;color:#fff;font-family:Arial,sans-serif}.wrap{max-width:1100px;margin:auto;padding:20px}h1{text-align:center}
+button{padding:10px 14px;border:0;border-radius:9px;font-weight:bold;cursor:pointer}.nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:15px}.nav button{background:#1d2945;color:#fff}.active,.primary{background:#6d5dfc!important;color:#fff}
+.card{background:#141b30;border:1px solid #293354;border-radius:15px;padding:18px;margin-bottom:15px}.tab{display:none}.tab.active{display:block}.teams,.grades,.list{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+input{width:100%;padding:12px;border-radius:9px;border:1px solid #35415f;background:#0e1528;color:#fff;box-sizing:border-box}.search{position:relative;margin:8px 0}.sug{position:absolute;top:48px;left:0;right:0;background:#10182b;border:1px solid #35415f;z-index:5;display:none;border-radius:9px;overflow:hidden}.sug div{padding:10px;border-bottom:1px solid #27324d;cursor:pointer}.sug div:hover{background:#24304d}
+.sel{display:flex;justify-content:space-between;padding:9px;background:#0e1528;border:1px solid #35415f;border-radius:8px;margin:5px 0}.results{display:none}.grade{text-align:center;background:#0e1528;padding:20px;border-radius:12px}.letter{font-size:55px;font-weight:900}.winner{padding:15px;text-align:center;background:#1d2847;border-radius:10px;margin-top:12px}.filters{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.filters button{background:#1d2945;color:#fff;font-size:12px}.box{background:#0e1528;border:1px solid #293354;border-radius:10px;overflow:hidden}.head{padding:10px;background:#18213a;font-weight:bold}.row{display:grid;grid-template-columns:40px 1fr 55px;padding:8px;border-top:1px solid #293354}.admin{display:none}.admin.on{display:block}table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid #293354;text-align:left}td input{padding:7px}.msg{margin:8px 0;color:#aab4ce}
+@media(max-width:700px){.teams,.grades,.list{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>🏈 Fantasy Trade Grader</h1>
+<div class="nav"><button id="bt" class="active" onclick="tab('trade')">⚖️ Trade Analyzer</button><button id="br" onclick="tab('rank')">📋 My PPR Rankings</button><button id="ba" onclick="tab('admin')">🔐 Admin</button></div>
 
-<div class="nav">
-<button id="tradeTabBtn" class="active" onclick="showTab('trade')">⚖️ Trade Analyzer</button>
-<button id="rankTabBtn" onclick="showTab('rankings')">📋 My PPR Rankings</button>
-</div>
+<section id="trade" class="tab active"><div class="card"><div class="teams">
+<div><h2>Team A Gives</h2><div id="A"></div><button onclick="addBox('A')">+ Add Player</button></div>
+<div><h2>Team B Gives</h2><div id="B"></div><button onclick="addBox('B')">+ Add Player</button></div>
+</div><button class="primary" style="width:100%;margin-top:15px" onclick="gradeTrade()">⚡ Grade Trade</button>
+<p style="color:#aab4ce">
+D/ST and kickers have no value. Equal values use ranking position as a tiny tiebreaker.
+Elite players have a nonlinear premium, established stars receive a modest track-record premium,
+and multi-player packages receive a small roster-spot discount.
+</p></div>
+<div id="res" class="results"><div class="grades"><div class="grade"><div>Team A</div><div id="ga" class="letter"></div><div id="va"></div></div><div class="grade"><div>Team B</div><div id="gb" class="letter"></div><div id="vb"></div></div></div><div id="win" class="winner"></div></div></section>
 
-<section id="tradeTab" class="tab active">
-<div class="card">
-<div class="teams">
-<div>
-<h2>Team A Gives</h2>
-<div id="aPlayers">
-<div class="search-wrap">
-<input class="player-search" data-team="a" placeholder="🔎 Search for a player..." autocomplete="off">
-<div class="suggestions"></div>
-</div>
-</div>
-<button class="add" onclick="addSearchBox('a')">+ Add Player</button>
-<div class="note">D/ST and K can be selected, but they add 0 trade value.</div>
-</div>
-<div>
-<h2>Team B Gives</h2>
-<div id="bPlayers">
-<div class="search-wrap">
-<input class="player-search" data-team="b" placeholder="🔎 Search for a player..." autocomplete="off">
-<div class="suggestions"></div>
-</div>
-</div>
-<button class="add" onclick="addSearchBox('b')">+ Add Player</button>
-<div class="note">D/ST and K can be selected, but they add 0 trade value.</div>
-</div>
-</div>
-<button class="grade-btn" onclick="gradeTrade()">⚡ Grade Trade</button>
-</div>
+<section id="rank" class="tab"><div class="card"><h2>📋 My PPR Rankings</h2><input id="rs" placeholder="Search rankings..." oninput="render()"><div id="fs" class="filters"></div><div id="list" class="list"></div></div></section>
 
-<div id="results" class="results">
-<div class="grades">
-<div class="grade"><div>Team A</div><div id="gradeA" class="letter"></div><div id="scoreA" class="muted"></div></div>
-<div class="grade"><div>Team B</div><div id="gradeB" class="letter"></div><div id="scoreB" class="muted"></div></div>
-</div>
-<div id="winner" class="winner"></div>
-<div class="card" style="margin-top:18px">
-<strong>How your values work:</strong> The number next to each player is their base trade value.
-If two players have the same base value, their ranking is used as the tiebreaker, so the higher-ranked player is slightly more valuable.
-D/ST and kickers have no value and therefore do not affect the trade score.
-</div>
-</div>
-</section>
+<section id="admin" class="tab"><div id="login" class="card"><h2>🔐 Owner Login</h2><input id="em" placeholder="Email" type="email"><br><br><input id="pw" placeholder="Password" type="password"><button class="primary" style="width:100%;margin-top:8px" onclick="login()">Log In</button><div id="lm" class="msg"></div></div>
+<div id="ap" class="card admin"><h2>✏️ Edit Rankings</h2><div id="am" class="msg"></div><input id="as" placeholder="Search players..." oninput="adminRender()"><button class="primary" style="margin:10px 0" onclick="save()">💾 Save Changes</button> <button onclick="addAdminPlayer()">➕ Add Player</button><div id="ar"></div><button onclick="logout()">Log Out</button></div></section>
+</div><script>
+const SUPABASE_URL="https://reykzmtrzxeczdvmpxhe.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="PASTE_YOUR_SB_PUBLISHABLE_KEY_HERE";
+const SB=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const fallback=[{"position": "QB", "rank": 1, "player_name": "Josh Allen", "value": 85}, {"position": "QB", "rank": 2, "player_name": "Lamar Jackson", "value": 84}, {"position": "QB", "rank": 3, "player_name": "Jayden Daniels", "value": 84}, {"position": "QB", "rank": 4, "player_name": "Jalen Hurts", "value": 83}, {"position": "QB", "rank": 5, "player_name": "Drake Maye", "value": 82}, {"position": "QB", "rank": 6, "player_name": "Joe Burrow", "value": 82}, {"position": "QB", "rank": 7, "player_name": "Matthew Stafford", "value": 82}, {"position": "QB", "rank": 8, "player_name": "Trevor Lawrence", "value": 81}, {"position": "QB", "rank": 9, "player_name": "Jaxson Dart", "value": 80}, {"position": "QB", "rank": 10, "player_name": "Caleb Williams", "value": 80}, {"position": "QB", "rank": 11, "player_name": "Dak Prescott", "value": 79}, {"position": "QB", "rank": 12, "player_name": "Bo Nix", "value": 79}, {"position": "QB", "rank": 13, "player_name": "Justin Herbert", "value": 79}, {"position": "QB", "rank": 14, "player_name": "Patrick Mahomes", "value": 79}, {"position": "QB", "rank": 15, "player_name": "Brock Purdy", "value": 78}, {"position": "QB", "rank": 16, "player_name": "Baker Mayfield", "value": 78}, {"position": "RB", "rank": 1, "player_name": "Jahmyr Gibbs", "value": 99}, {"position": "RB", "rank": 2, "player_name": "Bijan Robinson", "value": 98}, {"position": "RB", "rank": 3, "player_name": "Jonathan Taylor", "value": 94}, {"position": "RB", "rank": 4, "player_name": "Christian McCaffrey", "value": 93}, {"position": "RB", "rank": 5, "player_name": "James Cook", "value": 92}, {"position": "RB", "rank": 6, "player_name": "Omarion Hampton", "value": 90}, {"position": "RB", "rank": 7, "player_name": "Ashton Jeanty", "value": 90}, {"position": "RB", "rank": 8, "player_name": "De'Von Achane", "value": 88}, {"position": "RB", "rank": 9, "player_name": "Chase Brown", "value": 88}, {"position": "RB", "rank": 10, "player_name": "Saquon Barkley", "value": 87}, {"position": "RB", "rank": 11, "player_name": "Derrick Henry", "value": 84}, {"position": "RB", "rank": 12, "player_name": "Kenneth Walker", "value": 84}, {"position": "RB", "rank": 13, "player_name": "Josh Jacobs", "value": 83}, {"position": "RB", "rank": 14, "player_name": "Breece Hall", "value": 82}, {"position": "RB", "rank": 15, "player_name": "Jeremiah Love", "value": 81}, {"position": "RB", "rank": 16, "player_name": "Javonte Williams", "value": 80}, {"position": "RB", "rank": 17, "player_name": "Quinshon Judkins", "value": 79}, {"position": "RB", "rank": 18, "player_name": "Travis Etienne", "value": 79}, {"position": "RB", "rank": 19, "player_name": "Bucky Irving", "value": 75}, {"position": "RB", "rank": 20, "player_name": "David Montgomery", "value": 74}, {"position": "RB", "rank": 21, "player_name": "Kyren Williams", "value": 74}, {"position": "RB", "rank": 22, "player_name": "Cam Skattebo", "value": 73}, {"position": "RB", "rank": 23, "player_name": "DeAndre Swift", "value": 73}, {"position": "RB", "rank": 24, "player_name": "Bayshul Tuten", "value": 72}, {"position": "RB", "rank": 25, "player_name": "Jadarian Price", "value": 70}, {"position": "RB", "rank": 26, "player_name": "TreVeyon Henderson", "value": 69}, {"position": "RB", "rank": 27, "player_name": "J.K. Dobbins", "value": 66}, {"position": "RB", "rank": 28, "player_name": "Tony Pollard", "value": 65}, {"position": "RB", "rank": 29, "player_name": "Kenny Gainwell", "value": 63}, {"position": "RB", "rank": 30, "player_name": "Jonathon Brooks", "value": 63}, {"position": "WR", "rank": 1, "player_name": "Ja'Marr Chase", "value": 97}, {"position": "WR", "rank": 2, "player_name": "Puka Nacua", "value": 97}, {"position": "WR", "rank": 3, "player_name": "Jaxon Smith-Njigba", "value": 95}, {"position": "WR", "rank": 4, "player_name": "Amon-Ra St. Brown", "value": 94}, {"position": "WR", "rank": 5, "player_name": "Justin Jefferson", "value": 91}, {"position": "WR", "rank": 6, "player_name": "CeeDee Lamb", "value": 90}, {"position": "WR", "rank": 7, "player_name": "Drake London", "value": 88}, {"position": "WR", "rank": 8, "player_name": "Rashee Rice", "value": 88}, {"position": "WR", "rank": 9, "player_name": "A.J. Brown", "value": 87}, {"position": "WR", "rank": 10, "player_name": "Emeka Egbuka", "value": 87}, {"position": "WR", "rank": 11, "player_name": "Nico Collins", "value": 85}, {"position": "WR", "rank": 12, "player_name": "DeVonta Smith", "value": 84}, {"position": "WR", "rank": 13, "player_name": "Malik Nabers", "value": 84}, {"position": "WR", "rank": 14, "player_name": "George Pickens", "value": 84}, {"position": "WR", "rank": 15, "player_name": "Chris Olave", "value": 83}, {"position": "WR", "rank": 16, "player_name": "Garrett Wilson", "value": 82}, {"position": "WR", "rank": 17, "player_name": "Ladd McConkey", "value": 82}, {"position": "WR", "rank": 18, "player_name": "Zay Flowers", "value": 82}, {"position": "WR", "rank": 19, "player_name": "Tetairoa McMillan", "value": 81}, {"position": "WR", "rank": 20, "player_name": "Tee Higgins", "value": 80}, {"position": "WR", "rank": 21, "player_name": "Jaylen Waddle", "value": 79}, {"position": "WR", "rank": 22, "player_name": "D.J. Moore", "value": 79}, {"position": "WR", "rank": 23, "player_name": "Rome Odunze", "value": 77}, {"position": "WR", "rank": 24, "player_name": "Marvin Harrison Jr.", "value": 76}, {"position": "WR", "rank": 25, "player_name": "Luther Burden", "value": 76}, {"position": "WR", "rank": 26, "player_name": "Davante Adams", "value": 75}, {"position": "WR", "rank": 27, "player_name": "Brian Thomas Jr.", "value": 73}, {"position": "WR", "rank": 28, "player_name": "Jameson Williams", "value": 71}, {"position": "WR", "rank": 29, "player_name": "Mike Evans", "value": 71}, {"position": "WR", "rank": 30, "player_name": "Carnell Tate", "value": 70}, {"position": "TE", "rank": 1, "player_name": "Brock Bowers", "value": 88}, {"position": "TE", "rank": 2, "player_name": "Trey McBride", "value": 87}, {"position": "TE", "rank": 3, "player_name": "Colston Loveland", "value": 85}, {"position": "TE", "rank": 4, "player_name": "Tyler Warren", "value": 84}, {"position": "TE", "rank": 5, "player_name": "Sam LaPorta", "value": 81}, {"position": "TE", "rank": 6, "player_name": "Kyle Pitts", "value": 80}, {"position": "TE", "rank": 7, "player_name": "George Kittle", "value": 80}, {"position": "TE", "rank": 8, "player_name": "Harold Fannin Jr.", "value": 75}, {"position": "TE", "rank": 9, "player_name": "Tucker Kraft", "value": 74}, {"position": "TE", "rank": 10, "player_name": "Dallas Goedert", "value": 74}, {"position": "TE", "rank": 11, "player_name": "Jake Ferguson", "value": 73}, {"position": "TE", "rank": 12, "player_name": "Travis Kelce", "value": 70}, {"position": "TE", "rank": 13, "player_name": "Dalton Kincaid", "value": 70}, {"position": "TE", "rank": 14, "player_name": "Mark Andrews", "value": 69}, {"position": "TE", "rank": 15, "player_name": "Isaiah Likely", "value": 69}, {"position": "TE", "rank": 16, "player_name": "T.J. Hockenson", "value": 68}, {"position": "TE", "rank": 17, "player_name": "Kenyon Sadiq", "value": 66}, {"position": "TE", "rank": 18, "player_name": "Hunter Henry", "value": 65}, {"position": "D/ST", "rank": 1, "player_name": "Texans", "value": null}, {"position": "D/ST", "rank": 2, "player_name": "Seahawks", "value": null}, {"position": "D/ST", "rank": 3, "player_name": "Broncos", "value": null}, {"position": "D/ST", "rank": 4, "player_name": "Rams", "value": null}, {"position": "D/ST", "rank": 5, "player_name": "Steelers", "value": null}, {"position": "D/ST", "rank": 6, "player_name": "Ravens", "value": null}, {"position": "D/ST", "rank": 7, "player_name": "Eagles", "value": null}, {"position": "D/ST", "rank": 8, "player_name": "Lions", "value": null}, {"position": "D/ST", "rank": 9, "player_name": "Packers", "value": null}, {"position": "D/ST", "rank": 10, "player_name": "Browns", "value": null}, {"position": "K", "rank": 1, "player_name": "Brandon Aubrey", "value": null}, {"position": "K", "rank": 2, "player_name": "Ka'imi Fairbairn", "value": null}, {"position": "K", "rank": 3, "player_name": "Cameron Dicker", "value": null}, {"position": "K", "rank": 4, "player_name": "Jason Myers", "value": null}, {"position": "K", "rank": 5, "player_name": "Cam Little", "value": null}, {"position": "K", "rank": 6, "player_name": "Jake Bates", "value": null}, {"position": "K", "rank": 7, "player_name": "Harrison Butker", "value": null}, {"position": "K", "rank": 8, "player_name": "Harrison Mevis", "value": null}];
+let P=[],filter="ALL",authed=false;
+const n=s=>(s||"").toLowerCase().replace(/[’']/g,"").replace(/[-.]/g," ").replace(/\s+/g," ").trim();
+function tab(x){["trade","rank","admin"].forEach(y=>document.getElementById(y).classList.toggle("active",x===y));["bt","br","ba"].forEach((id,i)=>document.getElementById(id).classList.toggle("active",["trade","rank","admin"][i]===x));if(x==="admin")check()}
+function selected(t){return [...document.querySelectorAll("#"+t+" .sel")].map(x=>x.dataset.name)}
+function searchBox(t){let d=document.createElement("div");d.className="search";d.innerHTML='<input placeholder="🔎 Search player..." autocomplete="off"><div class="sug"></div>';document.getElementById(t).appendChild(d);setup(d.querySelector("input"))}
+function setup(i){let b=i.nextElementSibling,t=i.closest("#A")?"A":i.closest("#B")?"B":"";if(!t)return;i.oninput=()=>{let q=n(i.value);if(!q){b.style.display="none";return}let ch=new Set(selected(t).map(n)),m=P.filter(p=>!ch.has(n(p.player_name))&&n(p.player_name).includes(q)).slice(0,8);b.innerHTML=m.length?m.map((p,j)=>'<div data-j="'+j+'"><b>'+p.player_name+'</b> <small>'+p.position+' · #'+p.rank+(p.value==null?"":" · "+p.value)+'</small></div>').join(""):"<div>No player found</div>";b.style.display="block";b.querySelectorAll("[data-j]").forEach(x=>x.onmousedown=e=>{e.preventDefault();add(t,m[+x.dataset.j])})};i.onblur=()=>setTimeout(()=>b.style.display="none",150)}
+function add(t,p){if(!p||selected(t).map(n).includes(n(p.player_name)))return;let r=document.createElement("div");r.className="sel";r.dataset.name=p.player_name;r.innerHTML='<span>'+p.player_name+' <small>'+p.position+(p.value==null?"":" · "+p.value)+'</small></span><button>×</button>';r.querySelector("button").onclick=()=>r.remove();let box=document.getElementById(t),s=box.querySelector(".search");box.insertBefore(r,s||null);if(!s)searchBox(t)}
+function addBox(t){searchBox(t)}
 
-<section id="rankingsTab" class="tab">
-<div class="card">
-<h2>📋 My PPR Rankings</h2>
-<div class="muted">All rankings and values from your uploaded list.</div>
-<div class="rank-tools">
-<input id="rankingSearch" placeholder="🔎 Search your rankings..." oninput="renderRankings()">
-</div>
-<div id="filters" class="filters"></div>
-<div id="rankings" class="rankings"></div>
-<div class="note"><strong>Value rule:</strong> Base value comes from the number beside the player's name. Equal values use ranking position as the tiebreaker. D/ST and K intentionally have no trade value.</div>
-</div>
-</section>
-</div>
-
-<script>
-const players = [{"pos": "QB", "rank": 1, "name": "Josh Allen", "value": 85}, {"pos": "QB", "rank": 2, "name": "Lamar Jackson", "value": 84}, {"pos": "QB", "rank": 3, "name": "Jayden Daniels", "value": 84}, {"pos": "QB", "rank": 4, "name": "Jalen Hurts", "value": 83}, {"pos": "QB", "rank": 5, "name": "Drake Maye", "value": 82}, {"pos": "QB", "rank": 6, "name": "Joe Burrow", "value": 82}, {"pos": "QB", "rank": 7, "name": "Matthew Stafford", "value": 82}, {"pos": "QB", "rank": 8, "name": "Trevor Lawrence", "value": 81}, {"pos": "QB", "rank": 9, "name": "Jaxson Dart", "value": 80}, {"pos": "QB", "rank": 10, "name": "Caleb Williams", "value": 80}, {"pos": "QB", "rank": 11, "name": "Dak Prescott", "value": 79}, {"pos": "QB", "rank": 12, "name": "Bo Nix", "value": 79}, {"pos": "QB", "rank": 13, "name": "Justin Herbert", "value": 79}, {"pos": "QB", "rank": 14, "name": "Patrick Mahomes", "value": 79}, {"pos": "QB", "rank": 15, "name": "Brock Purdy", "value": 78}, {"pos": "QB", "rank": 16, "name": "Baker Mayfield", "value": 78}, {"pos": "RB", "rank": 1, "name": "Jahmyr Gibbs", "value": 99}, {"pos": "RB", "rank": 2, "name": "Bijan Robinson", "value": 98}, {"pos": "RB", "rank": 3, "name": "Jonathan Taylor", "value": 94}, {"pos": "RB", "rank": 4, "name": "Christian McCaffrey", "value": 93}, {"pos": "RB", "rank": 5, "name": "James Cook", "value": 92}, {"pos": "RB", "rank": 6, "name": "Omarion Hampton", "value": 90}, {"pos": "RB", "rank": 7, "name": "Ashton Jeanty", "value": 90}, {"pos": "RB", "rank": 8, "name": "De'Von Achane", "value": 88}, {"pos": "RB", "rank": 9, "name": "Chase Brown", "value": 88}, {"pos": "RB", "rank": 10, "name": "Saquon Barkley", "value": 87}, {"pos": "RB", "rank": 11, "name": "Derrick Henry", "value": 84}, {"pos": "RB", "rank": 12, "name": "Kenneth Walker", "value": 84}, {"pos": "RB", "rank": 13, "name": "Josh Jacobs", "value": 83}, {"pos": "RB", "rank": 14, "name": "Breece Hall", "value": 82}, {"pos": "RB", "rank": 15, "name": "Jeremiah Love", "value": 81}, {"pos": "RB", "rank": 16, "name": "Javonte Williams", "value": 80}, {"pos": "RB", "rank": 17, "name": "Quinshon Judkins", "value": 79}, {"pos": "RB", "rank": 18, "name": "Travis Etienne", "value": 79}, {"pos": "RB", "rank": 19, "name": "Bucky Irving", "value": 75}, {"pos": "RB", "rank": 20, "name": "David Montgomery", "value": 74}, {"pos": "RB", "rank": 21, "name": "Kyren Williams", "value": 74}, {"pos": "RB", "rank": 22, "name": "Cam Skattebo", "value": 73}, {"pos": "RB", "rank": 23, "name": "DeAndre Swift", "value": 73}, {"pos": "RB", "rank": 24, "name": "Bayshul Tuten", "value": 72}, {"pos": "RB", "rank": 25, "name": "Jadarian Price", "value": 70}, {"pos": "RB", "rank": 26, "name": "TreVeyon Henderson", "value": 69}, {"pos": "RB", "rank": 27, "name": "J.K. Dobbins", "value": 66}, {"pos": "RB", "rank": 28, "name": "Tony Pollard", "value": 65}, {"pos": "RB", "rank": 29, "name": "Kenny Gainwell", "value": 63}, {"pos": "RB", "rank": 30, "name": "Jonathon Brooks", "value": 63}, {"pos": "WR", "rank": 1, "name": "Ja'Marr Chase", "value": 97}, {"pos": "WR", "rank": 2, "name": "Puka Nacua", "value": 97}, {"pos": "WR", "rank": 3, "name": "Jaxon Smith-Njigba", "value": 95}, {"pos": "WR", "rank": 4, "name": "Amon-Ra St. Brown", "value": 94}, {"pos": "WR", "rank": 5, "name": "Justin Jefferson", "value": 91}, {"pos": "WR", "rank": 6, "name": "CeeDee Lamb", "value": 90}, {"pos": "WR", "rank": 7, "name": "Drake London", "value": 88}, {"pos": "WR", "rank": 8, "name": "Rashee Rice", "value": 88}, {"pos": "WR", "rank": 9, "name": "A.J. Brown", "value": 87}, {"pos": "WR", "rank": 10, "name": "Emeka Egbuka", "value": 87}, {"pos": "WR", "rank": 11, "name": "Nico Collins", "value": 85}, {"pos": "WR", "rank": 12, "name": "DeVonta Smith", "value": 84}, {"pos": "WR", "rank": 13, "name": "Malik Nabers", "value": 84}, {"pos": "WR", "rank": 14, "name": "George Pickens", "value": 84}, {"pos": "WR", "rank": 15, "name": "Chris Olave", "value": 83}, {"pos": "WR", "rank": 16, "name": "Garrett Wilson", "value": 82}, {"pos": "WR", "rank": 17, "name": "Ladd McConkey", "value": 82}, {"pos": "WR", "rank": 18, "name": "Zay Flowers", "value": 82}, {"pos": "WR", "rank": 19, "name": "Tetairoa McMillan", "value": 81}, {"pos": "WR", "rank": 20, "name": "Tee Higgins", "value": 80}, {"pos": "WR", "rank": 21, "name": "Jaylen Waddle", "value": 79}, {"pos": "WR", "rank": 22, "name": "D.J. Moore", "value": 79}, {"pos": "WR", "rank": 23, "name": "Rome Odunze", "value": 77}, {"pos": "WR", "rank": 24, "name": "Marvin Harrison Jr.", "value": 76}, {"pos": "WR", "rank": 25, "name": "Luther Burden", "value": 76}, {"pos": "WR", "rank": 26, "name": "Davante Adams", "value": 75}, {"pos": "WR", "rank": 27, "name": "Brian Thomas Jr.", "value": 73}, {"pos": "WR", "rank": 28, "name": "Jameson Williams", "value": 71}, {"pos": "WR", "rank": 29, "name": "Mike Evans", "value": 71}, {"pos": "WR", "rank": 30, "name": "Carnell Tate", "value": 70}, {"pos": "TE", "rank": 1, "name": "Brock Bowers", "value": 88}, {"pos": "TE", "rank": 2, "name": "Trey McBride", "value": 87}, {"pos": "TE", "rank": 3, "name": "Colston Loveland", "value": 85}, {"pos": "TE", "rank": 4, "name": "Tyler Warren", "value": 84}, {"pos": "TE", "rank": 5, "name": "Sam LaPorta", "value": 81}, {"pos": "TE", "rank": 6, "name": "Kyle Pitts", "value": 80}, {"pos": "TE", "rank": 7, "name": "George Kittle", "value": 80}, {"pos": "TE", "rank": 8, "name": "Harold Fannin Jr.", "value": 75}, {"pos": "TE", "rank": 9, "name": "Tucker Kraft", "value": 74}, {"pos": "TE", "rank": 10, "name": "Dallas Goedert", "value": 74}, {"pos": "TE", "rank": 11, "name": "Jake Ferguson", "value": 73}, {"pos": "TE", "rank": 12, "name": "Travis Kelce", "value": 70}, {"pos": "TE", "rank": 13, "name": "Dalton Kincaid", "value": 70}, {"pos": "TE", "rank": 14, "name": "Mark Andrews", "value": 69}, {"pos": "TE", "rank": 15, "name": "Isaiah Likely", "value": 69}, {"pos": "TE", "rank": 16, "name": "T.J. Hockenson", "value": 68}, {"pos": "TE", "rank": 17, "name": "Kenyon Sadiq", "value": 66}, {"pos": "TE", "rank": 18, "name": "Hunter Henry", "value": 65}, {"pos": "D/ST", "rank": 1, "name": "Texans", "value": null}, {"pos": "D/ST", "rank": 2, "name": "Seahawks", "value": null}, {"pos": "D/ST", "rank": 3, "name": "Broncos", "value": null}, {"pos": "D/ST", "rank": 4, "name": "Rams", "value": null}, {"pos": "D/ST", "rank": 5, "name": "Steelers", "value": null}, {"pos": "D/ST", "rank": 6, "name": "Ravens", "value": null}, {"pos": "D/ST", "rank": 7, "name": "Eagles", "value": null}, {"pos": "D/ST", "rank": 8, "name": "Lions", "value": null}, {"pos": "D/ST", "rank": 9, "name": "Packers", "value": null}, {"pos": "D/ST", "rank": 10, "name": "Browns", "value": null}, {"pos": "K", "rank": 1, "name": "Brandon Aubrey", "value": null}, {"pos": "K", "rank": 2, "name": "Ka'imi Fairbairn", "value": null}, {"pos": "K", "rank": 3, "name": "Cameron Dicker", "value": null}, {"pos": "K", "rank": 4, "name": "Jason Myers", "value": null}, {"pos": "K", "rank": 5, "name": "Cam Little", "value": null}, {"pos": "K", "rank": 6, "name": "Jake Bates", "value": null}, {"pos": "K", "rank": 7, "name": "Harrison Butker", "value": null}, {"pos": "K", "rank": 8, "name": "Harrison Mevis", "value": null}];
-const playerMap = new Map(players.map(p => [p.name.toLowerCase(), p]));
-let currentFilter = "ALL";
-
-function normalize(s) {
-return s.toLowerCase().replace(/[’']/g,"").replace(/\./g,"").replace(/-/g," ").replace(/\s+/g," ").trim();
-}
-
-function getSelected(team) {
-return [...document.querySelectorAll("#"+team+"Players .selected")].map(x => x.dataset.player);
-}
-
-function setupSearch(input) {
-const wrap = input.closest(".search-wrap");
-const suggestions = wrap.querySelector(".suggestions");
-const team = input.dataset.team;
-
-function showSuggestions() {
-const q = normalize(input.value);
-if (!q) {
-suggestions.style.display = "none";
-suggestions.innerHTML = "";
-return;
-}
-
-const chosen = new Set(getSelected(team).map(normalize));
-const matches = players.filter(p =>
-!chosen.has(normalize(p.name)) &&
-normalize(p.name).includes(q)
-).slice(0, 8);
-
-if (!matches.length) {
-suggestions.innerHTML = '<div class="suggestion">No player found</div>';
-suggestions.style.display = "block";
-return;
-}
-
-suggestions.innerHTML = matches.map((p, i) => `
-<div class="suggestion" data-index="${i}">
-  <span><strong>${p.name}</strong></span>
-  <span class="muted">${p.pos} · #${p.rank}${p.value === null ? " · no value" : " · " + p.value}</span>
-</div>
-`).join("");
-
-suggestions.style.display = "block";
-
-suggestions.querySelectorAll(".suggestion[data-index]").forEach(item => {
-item.addEventListener("mousedown", function(e) {
-e.preventDefault();
-const index = Number(this.dataset.index);
-const player = matches[index];
-if (player) addPlayer(team, player);
-});
-});
-}
-
-input.addEventListener("input", showSuggestions);
-input.addEventListener("focus", showSuggestions);
-
-input.addEventListener("keydown", e => {
-if (e.key === "Enter") {
-const first = suggestions.querySelector(".suggestion[data-index]");
-if (first) {
-e.preventDefault();
-first.dispatchEvent(new MouseEvent("mousedown", {bubbles:true}));
-}
-}
-});
-
-input.addEventListener("blur", () => {
-setTimeout(() => {
-if (!wrap.contains(document.activeElement)) {
-suggestions.style.display = "none";
-}
-}, 150);
-});
-}
-
-function addPlayer(team, player) {
-if (!player) return;
-if (getSelected(team).map(normalize).includes(normalize(player.name))) return;
-
-const box = document.getElementById(team+"Players");
-const row = document.createElement("div");
-row.className = "selected";
-row.dataset.player = player.name;
-row.innerHTML = `
-<span>${player.name} <span class="muted">${player.pos}${player.value === null ? " · no value" : " · value "+player.value}</span></span>
-<button class="remove" type="button">×</button>`;
-row.querySelector(".remove").onclick = () => row.remove();
-
-box.insertBefore(row, box.querySelector(".search-wrap"));
-const input = box.querySelector(".search-wrap input");
-input.value="";
-box.querySelector(".suggestions").style.display="none";
-input.focus();
-}
-
-function addSearchBox(team) {
-const box = document.getElementById(team+"Players");
-const wrap = document.createElement("div");
-wrap.className="search-wrap";
-wrap.innerHTML='<input class="player-search" data-team="'+team+'" placeholder="🔎 Search for a player..." autocomplete="off"><div class="suggestions"></div>';
-box.appendChild(wrap);
-setupSearch(wrap.querySelector("input"));
-wrap.querySelector("input").focus();
-}
-
-document.querySelectorAll(".player-search").forEach(input => setupSearch(input));
-
-function tradeValue(playerName) {
-const p = playerMap.get(playerName.toLowerCase());
-if (!p || p.value === null) return 0;
-return p.value + (100 - p.rank) * 0.001;
-}
-
-function totalValue(team) {
-return getSelected(team).reduce((sum, name) => sum + tradeValue(name), 0);
-}
-
-function grade(score) {
-if(score >= 97) return "A+";
-if(score >= 93) return "A";
-if(score >= 89) return "A-";
-if(score >= 85) return "B+";
-if(score >= 81) return "B";
-if(score >= 77) return "B-";
-if(score >= 73) return "C+";
-if(score >= 69) return "C";
-if(score >= 65) return "C-";
-if(score >= 60) return "D";
-return "F";
-}
-
-function gradeTrade() {
-const a = getSelected("a");
-const b = getSelected("b");
-if (!a.length || !b.length) {
-alert("Select at least one player on both sides.");
-return;
-}
-
-const aValue = totalValue("a");
-const bValue = totalValue("b");
-const maxValue = Math.max(aValue,bValue);
-const aScore = maxValue ? Math.round(aValue/maxValue*100) : 100;
-const bScore = maxValue ? Math.round(bValue/maxValue*100) : 100;
-
-document.getElementById("gradeA").textContent = grade(aScore);
-document.getElementById("gradeB").textContent = grade(bScore);
-document.getElementById("scoreA").textContent = "Trade value: "+aValue.toFixed(1);
-document.getElementById("scoreB").textContent = "Trade value: "+bValue.toFixed(1);
-
-document.getElementById("winner").textContent =
-Math.abs(aValue-bValue) < 0.01 ? "🤝 Essentially even!"
-: aValue > bValue ? "🏆 Team A wins the trade!" : "🏆 Team B wins the trade!";
-
-document.getElementById("results").style.display="block";
-}
-
-function showTab(tab) {
-document.getElementById("tradeTab").classList.toggle("active", tab==="trade");
-document.getElementById("rankingsTab").classList.toggle("active", tab==="rankings");
-document.getElementById("tradeTabBtn").classList.toggle("active", tab==="trade");
-document.getElementById("rankTabBtn").classList.toggle("active", tab==="rankings");
-}
-
-function renderRankings() {
-const q = normalize(document.getElementById("rankingSearch").value);
-const filtered = players.filter(p =>
-(currentFilter==="ALL" || p.pos===currentFilter) &&
-(!q || normalize(p.name).includes(q))
-);
-
-const groups = {};
-filtered.forEach(p => (groups[p.pos] ??= []).push(p));
-const order = ["QB","RB","WR","TE","D/ST","K"];
-
-document.getElementById("rankings").innerHTML =
-order.filter(pos => groups[pos]).map(pos => `
-<div class="rank-card">
-<div class="rank-head">${pos}</div>
-${groups[pos].map(p => `
-<div class="rank-row">
-<div class="rank-num">#${p.rank}</div>
-<div>${p.name}</div>
-<div class="rank-value">${p.value===null ? '<span class="no-value">—</span>' : p.value}</div>
-</div>`).join("")}
-</div>`).join("")
-|| '<div class="note">No players found.</div>';
-}
-
-["ALL","QB","RB","WR","TE","D/ST","K"].forEach(pos => {
-const btn=document.createElement("button");
-btn.textContent=pos;
-if(pos==="ALL") btn.classList.add("active");
-btn.onclick=()=>{
-currentFilter=pos;
-document.querySelectorAll("#filters button").forEach(x=>x.classList.remove("active"));
-btn.classList.add("active");
-renderRankings();
+const seasonStats={
+"Jaxon Smith-Njigba":{label:"1,793 receiving yards and 10 TDs in 2025"},
+"Puka Nacua":{label:"1,715 receiving yards and 10 TDs in 2025"},
+"Ja'Marr Chase":{label:"1,412 receiving yards and 8 TDs in 2025"},
+"Amon-Ra St. Brown":{label:"1,401 receiving yards and 11 TDs in 2025"},
+"George Pickens":{label:"1,429 receiving yards and 9 TDs in 2025"},
+"Trey McBride":{label:"1,239 receiving yards and 11 TDs in 2025"},
+"Jonathan Taylor":{label:"1,585 rushing yards and 18 TDs in 2025"},
+"James Cook":{label:"1,621 rushing yards and 12 TDs in 2025"},
+"Matthew Stafford":{label:"4,707 passing yards and 46 TDs in 2025"},
+"Dak Prescott":{label:"4,552 passing yards and 30 TDs in 2025"},
+"Drake Maye":{label:"4,394 passing yards and 31 TDs in 2025"}
 };
-document.getElementById("filters").appendChild(btn);
+function buildTradeFeedback(){
+ const names=[...selected("A"),...selected("B")];
+ const known=names.filter(x=>seasonStats[x] || P.find(p=>p.player_name===x&&p.feedback));
+ const comments=[];
+ known.slice(0,4).forEach(x=>{
+  const p=P.find(z=>z.player_name===x);
+  if(p && p.feedback) comments.push(x+" — "+p.feedback+".");
+  else if(seasonStats[x]) comments.push(x+" had "+seasonStats[x].label+".");
 });
+ const av=total("A"),bv=total("B");
+ if(Math.abs(av-bv)<.0001) comments.push("Both sides are very close according to your custom trade model.");
+ else {
+  const w=av>bv?"Team A":"Team B";
+  comments.push(w+" has the stronger package according to your rankings, nonlinear value curve, and roster-spot adjustment.");
+ }
+ const a=selected("A").sort((x,y)=>tv(y)-tv(x))[0],b=selected("B").sort((x,y)=>tv(y)-tv(x))[0];
+ if(a&&b&&tv(a)>tv(b)&&seasonStats[a]) comments.push(a+" is valued higher than "+b+" in your rankings, with "+seasonStats[a].label+" supporting the difference.");
+ else if(a&&b&&tv(b)>tv(a)&&seasonStats[b]) comments.push(b+" is valued higher than "+a+" in your rankings, with "+seasonStats[b].label+" supporting the difference.");
+ return comments.join(" ");
+}
 
-renderRankings();
-</script>
-</body>
-</html>
+/*
+ TRADE LOGIC
+ - Values are nonlinear: elite players are worth disproportionately more.
+ - This prevents "99 for 80 + 80" from being treated as equal.
+ - Established stars get a modest track-record premium. This is intentionally
+   conservative because the user's ranking/value is still the primary input.
+ - Multiple-player packages get a small diversification discount: adding players
+   does not create value one-for-one because roster spots are scarce.
+*/
+const trackRecordPremium = {
+  "Josh Allen":1.04,"Lamar Jackson":1.04,"Jalen Hurts":1.04,
+  "Joe Burrow":1.04,"Patrick Mahomes":1.05,
+  "Christian McCaffrey":1.05,"Saquon Barkley":1.04,"Derrick Henry":1.04,
+  "Jonathan Taylor":1.03,"Bijan Robinson":1.02,"Jahmyr Gibbs":1.02,
+  "Ja'Marr Chase":1.05,"Justin Jefferson":1.05,"CeeDee Lamb":1.04,
+  "Amon-Ra St. Brown":1.04,"A.J. Brown":1.04,"Davante Adams":1.04,
+  "Travis Kelce":1.04,"George Kittle":1.04,"Brock Bowers":1.01
+};
+
+function tv(name){
+  const p=P.find(x=>n(x.player_name)===n(name));
+  if(!p || p.value==null) return 0;
+
+  // Ranking is a tiny tiebreaker, exactly as requested.
+  const base = p.value + (100-p.rank)*0.001;
+
+  // Exponential curve creates meaningful separation between tiers.
+  // 99 is intentionally much more valuable than two 80s.
+  const nonlinear = Math.pow(1.075, base-60);
+
+  const premium = trackRecordPremium[p.player_name] || 1;
+  return nonlinear * premium;
+}
+
+function total(t){
+  const names=selected(t);
+  let total=names.reduce((a,x)=>a+tv(x),0);
+
+  // Package discount: additional players are useful, but not worth as much
+  // as their raw values added together because roster spots are limited.
+  if(names.length>1){
+    const discount = Math.pow(0.92,names.length-1);
+    total *= discount;
+  }
+  return total;
+}
+
+function rawTotal(t){
+  return selected(t).reduce((a,x)=>{
+    const p=P.find(z=>n(z.player_name)===n(x));
+    return a+(p&&p.value!=null?p.value:0);
+  },0);
+}
+
+function gr(x){
+  if(x>=97)return"A+";
+  if(x>=93)return"A";
+  if(x>=89)return"A-";
+  if(x>=85)return"B+";
+  if(x>=81)return"B";
+  if(x>=77)return"B-";
+  if(x>=73)return"C+";
+  if(x>=69)return"C";
+  if(x>=65)return"C-";
+  if(x>=60)return"D";
+  return"F";
+}
+
+function gradeTrade(){
+  if(!selected("A").length||!selected("B").length)
+    return alert("Select players on both sides.");
+
+  const a=total("A"), b=total("B");
+  const m=Math.max(a,b);
+  const x=m?Math.round(a/m*100):100;
+  const y=m?Math.round(b/m*100):100;
+
+  ga.textContent=gr(x);
+  gb.textContent=gr(y);
+
+  const rawA=rawTotal("A"), rawB=rawTotal("B");
+  va.textContent="Trade score: "+a.toFixed(1)+" · Listed value: "+rawA;
+  vb.textContent="Trade score: "+b.toFixed(1)+" · Listed value: "+rawB;
+
+  const ratio=Math.min(a,b)/Math.max(a,b);
+  let message;
+
+  if(ratio>=0.96) message="🤝 Very close trade";
+  else if(ratio>=0.90) message="⚖️ Competitive trade";
+  else if(ratio>=0.82) message="📈 Noticeable advantage";
+  else if(ratio>=0.70) message="⚠️ Significant advantage";
+  else message="🚨 Major mismatch";
+
+  const winner=a>b?" Team A has the advantage.":" Team B has the advantage.";
+  if(Math.abs(a-b)<0.0001) message="🤝 Essentially even!";
+  else message+=winner;
+
+  win.textContent=message;
+  document.getElementById("feedbackText").textContent=buildTradeFeedback();
+  res.style.display="block";
+}
+function render(){let q=n(rs.value),f=P.filter(p=>(filter==="ALL"||p.position===filter)&&(!q||n(p.player_name).includes(q))),g={};f.forEach(p=>(g[p.position]??=[]).push(p));list.innerHTML=["QB","RB","WR","TE","D/ST","K"].filter(x=>g[x]).map(x=>'<div class="box"><div class="head">'+x+'</div>'+g[x].map(p=>'<div class="row"><span>#'+p.rank+'</span><span>'+p.player_name+'</span><b>'+(p.value==null?"—":p.value)+'</b></div>').join("")+'</div>').join("")}
+["ALL","QB","RB","WR","TE","D/ST","K"].forEach(x=>{let b=document.createElement("button");b.textContent=x;if(x==="ALL")b.className="active";b.onclick=()=>{filter=x;document.querySelectorAll("#fs button").forEach(z=>z.classList.remove("active"));b.classList.add("active");render()};fs.appendChild(b)});
+async function load(){try{let r=await SB.from("rankings").select("*").order("position").order("rank");if(r.error)throw r.error;P=r.data.length?r.data:fallback}catch(e){P=fallback}render()}
+async function login(){let r=await SB.auth.signInWithPassword({email:em.value,password:pw.value});lm.textContent=r.error?r.error.message:"Logged in!";if(!r.error)check()}
+async function logout(){await SB.auth.signOut();check()}
+async function check(){let r=await SB.auth.getUser();authed=!!r.data.user;login.style.display=authed?"none":"block";ap.classList.toggle("on",authed);if(authed)adminRender()}
+function adminRender(){
+if(!authed)return;
+let q=n(as.value);
+let f=P.filter(p=>!q||n(p.player_name).includes(q));
+ar.innerHTML='<div style="overflow:auto"><table><tr><th>Pos</th><th>Rank</th><th>Player</th><th>Value</th><th>Feedback</th></tr>'+
+f.map(p=>'<tr data-id="'+(p.id??"")+'" data-new="'+(p.id? "0":"1")+'">'+
+'<td><input data-f="position" value="'+(p.position||"")+'"></td>'+
+'<td><input data-f="rank" type="number" value="'+(p.rank??"")+'"></td>'+
+'<td><input data-f="player_name" value="'+(p.player_name||"")+'"></td>'+
+'<td><input data-f="value" type="number" value="'+(p.value??"")+'"></td>'+
+'<td><input data-f="feedback" value="'+(p.feedback||"")+'" placeholder="Example: 1,000+ yards last season"></td>'+
+'</tr>').join("")+'</table></div>';
+}
+
+function addAdminPlayer(){
+if(!authed)return;
+P.push({
+ id:null,
+ position:"RB",
+ rank:Math.max(0,...P.map(p=>Number(p.rank)||0))+1,
+ player_name:"New Player",
+ value:50,
+ feedback:""
+});
+adminRender();
+}
+async function save(){
+if(!authed)return;
+am.textContent="Saving...";
+try{
+for(const r of ar.querySelectorAll("tr[data-new]")){
+ let o={};
+ r.querySelectorAll("[data-f]").forEach(i=>o[i.dataset.f]=i.value);
+ o.rank=parseInt(o.rank,10);
+ o.value=o.value===""?null:Number(o.value);
+ if(r.dataset.new==="1"){
+   const q=await SB.from("rankings").insert(o);
+   if(q.error)throw q.error;
+ }else{
+   const id=r.dataset.id;
+   const q=await SB.from("rankings").update(o).eq("id",id);
+   if(q.error)throw q.error;
+ }
+}
+am.textContent="✅ Saved. Everyone now sees your updated rankings.";
+await load();
+adminRender();
+}catch(e){
+am.textContent="❌ "+e.message;
+}
+}
+
+window.addEventListener("load",async()=>{searchBox("A");searchBox("B");await load()});
+</script></body></html>
