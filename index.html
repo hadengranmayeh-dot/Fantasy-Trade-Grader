@@ -16,7 +16,7 @@ input{width:100%;padding:12px;border-radius:9px;border:1px solid #35415f;backgro
 <section id="trade" class="tab active"><div id="loadStatus" style="text-align:center;color:#aab4ce;margin:8px"></div><div class="card"><div class="teams">
 <div><h2>Team A Gives</h2><div id="A"></div><button onclick="addBox('A')">+ Add Player</button></div>
 <div><h2>Team B Gives</h2><div id="B"></div><button onclick="addBox('B')">+ Add Player</button></div>
-</div><button class="primary" style="width:100%;margin-top:15px" onclick="gradeTrade()">⚡ Grade Trade</button>
+</div><button id="gradeBtn" class="primary" type="button" style="width:100%;margin-top:15px">⚡ Grade Trade</button>
 <p style="color:#aab4ce">
 D/ST and kickers have no value. Equal values use ranking position as a tiny tiebreaker.
 Elite players have a nonlinear premium, established stars receive a modest track-record premium,
@@ -30,7 +30,7 @@ and multi-player packages receive a small roster-spot discount.
 <div id="ap" class="card admin"><h2>✏️ Edit Rankings</h2><div id="am" class="msg"></div><input id="as" placeholder="Search players..." oninput="adminRender()"><button class="primary" style="margin:10px 0" onclick="save()">💾 Save Changes</button> <button onclick="addAdminPlayer()">➕ Add Player</button><div id="ar"></div><button onclick="logout()">Log Out</button></div></section>
 </div><script>
 const SUPABASE_URL="https://reykzmtrzxeczdvmpxhe.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY="sb_publishable_PmzO8WHweZBb13NhOp2Bjg_83BjhiLs";
+const SUPABASE_PUBLISHABLE_KEY="PASTE_YOUR_SB_PUBLISHABLE_KEY_HERE";
 const SB=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const fallback=[{"position": "QB", "rank": 1, "player_name": "Josh Allen", "value": 85}, {"position": "QB", "rank": 2, "player_name": "Lamar Jackson", "value": 84}, {"position": "QB", "rank": 3, "player_name": "Jayden Daniels", "value": 84}, {"position": "QB", "rank": 4, "player_name": "Jalen Hurts", "value": 83}, {"position": "QB", "rank": 5, "player_name": "Drake Maye", "value": 82}, {"position": "QB", "rank": 6, "player_name": "Joe Burrow", "value": 82}, {"position": "QB", "rank": 7, "player_name": "Matthew Stafford", "value": 82}, {"position": "QB", "rank": 8, "player_name": "Trevor Lawrence", "value": 81}, {"position": "QB", "rank": 9, "player_name": "Jaxson Dart", "value": 80}, {"position": "QB", "rank": 10, "player_name": "Caleb Williams", "value": 80}, {"position": "QB", "rank": 11, "player_name": "Dak Prescott", "value": 79}, {"position": "QB", "rank": 12, "player_name": "Bo Nix", "value": 79}, {"position": "QB", "rank": 13, "player_name": "Justin Herbert", "value": 79}, {"position": "QB", "rank": 14, "player_name": "Patrick Mahomes", "value": 79}, {"position": "QB", "rank": 15, "player_name": "Brock Purdy", "value": 78}, {"position": "QB", "rank": 16, "player_name": "Baker Mayfield", "value": 78}, {"position": "RB", "rank": 1, "player_name": "Jahmyr Gibbs", "value": 99}, {"position": "RB", "rank": 2, "player_name": "Bijan Robinson", "value": 98}, {"position": "RB", "rank": 3, "player_name": "Jonathan Taylor", "value": 94}, {"position": "RB", "rank": 4, "player_name": "Christian McCaffrey", "value": 93}, {"position": "RB", "rank": 5, "player_name": "James Cook", "value": 92}, {"position": "RB", "rank": 6, "player_name": "Omarion Hampton", "value": 90}, {"position": "RB", "rank": 7, "player_name": "Ashton Jeanty", "value": 90}, {"position": "RB", "rank": 8, "player_name": "De'Von Achane", "value": 88}, {"position": "RB", "rank": 9, "player_name": "Chase Brown", "value": 88}, {"position": "RB", "rank": 10, "player_name": "Saquon Barkley", "value": 87}, {"position": "RB", "rank": 11, "player_name": "Derrick Henry", "value": 84}, {"position": "RB", "rank": 12, "player_name": "Kenneth Walker", "value": 84}, {"position": "RB", "rank": 13, "player_name": "Josh Jacobs", "value": 83}, {"position": "RB", "rank": 14, "player_name": "Breece Hall", "value": 82}, {"position": "RB", "rank": 15, "player_name": "Jeremiah Love", "value": 81}, {"position": "RB", "rank": 16, "player_name": "Javonte Williams", "value": 80}, {"position": "RB", "rank": 17, "player_name": "Quinshon Judkins", "value": 79}, {"position": "RB", "rank": 18, "player_name": "Travis Etienne", "value": 79}, {"position": "RB", "rank": 19, "player_name": "Bucky Irving", "value": 75}, {"position": "RB", "rank": 20, "player_name": "David Montgomery", "value": 74}, {"position": "RB", "rank": 21, "player_name": "Kyren Williams", "value": 74}, {"position": "RB", "rank": 22, "player_name": "Cam Skattebo", "value": 73}, {"position": "RB", "rank": 23, "player_name": "DeAndre Swift", "value": 73}, {"position": "RB", "rank": 24, "player_name": "Bayshul Tuten", "value": 72}, {"position": "RB", "rank": 25, "player_name": "Jadarian Price", "value": 70}, {"position": "RB", "rank": 26, "player_name": "TreVeyon Henderson", "value": 69}, {"position": "RB", "rank": 27, "player_name": "J.K. Dobbins", "value": 66}, {"position": "RB", "rank": 28, "player_name": "Tony Pollard", "value": 65}, {"position": "RB", "rank": 29, "player_name": "Kenny Gainwell", "value": 63}, {"position": "RB", "rank": 30, "player_name": "Jonathon Brooks", "value": 63}, {"position": "WR", "rank": 1, "player_name": "Ja'Marr Chase", "value": 97}, {"position": "WR", "rank": 2, "player_name": "Puka Nacua", "value": 97}, {"position": "WR", "rank": 3, "player_name": "Jaxon Smith-Njigba", "value": 95}, {"position": "WR", "rank": 4, "player_name": "Amon-Ra St. Brown", "value": 94}, {"position": "WR", "rank": 5, "player_name": "Justin Jefferson", "value": 91}, {"position": "WR", "rank": 6, "player_name": "CeeDee Lamb", "value": 90}, {"position": "WR", "rank": 7, "player_name": "Drake London", "value": 88}, {"position": "WR", "rank": 8, "player_name": "Rashee Rice", "value": 88}, {"position": "WR", "rank": 9, "player_name": "A.J. Brown", "value": 87}, {"position": "WR", "rank": 10, "player_name": "Emeka Egbuka", "value": 87}, {"position": "WR", "rank": 11, "player_name": "Nico Collins", "value": 85}, {"position": "WR", "rank": 12, "player_name": "DeVonta Smith", "value": 84}, {"position": "WR", "rank": 13, "player_name": "Malik Nabers", "value": 84}, {"position": "WR", "rank": 14, "player_name": "George Pickens", "value": 84}, {"position": "WR", "rank": 15, "player_name": "Chris Olave", "value": 83}, {"position": "WR", "rank": 16, "player_name": "Garrett Wilson", "value": 82}, {"position": "WR", "rank": 17, "player_name": "Ladd McConkey", "value": 82}, {"position": "WR", "rank": 18, "player_name": "Zay Flowers", "value": 82}, {"position": "WR", "rank": 19, "player_name": "Tetairoa McMillan", "value": 81}, {"position": "WR", "rank": 20, "player_name": "Tee Higgins", "value": 80}, {"position": "WR", "rank": 21, "player_name": "Jaylen Waddle", "value": 79}, {"position": "WR", "rank": 22, "player_name": "D.J. Moore", "value": 79}, {"position": "WR", "rank": 23, "player_name": "Rome Odunze", "value": 77}, {"position": "WR", "rank": 24, "player_name": "Marvin Harrison Jr.", "value": 76}, {"position": "WR", "rank": 25, "player_name": "Luther Burden", "value": 76}, {"position": "WR", "rank": 26, "player_name": "Davante Adams", "value": 75}, {"position": "WR", "rank": 27, "player_name": "Brian Thomas Jr.", "value": 73}, {"position": "WR", "rank": 28, "player_name": "Jameson Williams", "value": 71}, {"position": "WR", "rank": 29, "player_name": "Mike Evans", "value": 71}, {"position": "WR", "rank": 30, "player_name": "Carnell Tate", "value": 70}, {"position": "TE", "rank": 1, "player_name": "Brock Bowers", "value": 88}, {"position": "TE", "rank": 2, "player_name": "Trey McBride", "value": 87}, {"position": "TE", "rank": 3, "player_name": "Colston Loveland", "value": 85}, {"position": "TE", "rank": 4, "player_name": "Tyler Warren", "value": 84}, {"position": "TE", "rank": 5, "player_name": "Sam LaPorta", "value": 81}, {"position": "TE", "rank": 6, "player_name": "Kyle Pitts", "value": 80}, {"position": "TE", "rank": 7, "player_name": "George Kittle", "value": 80}, {"position": "TE", "rank": 8, "player_name": "Harold Fannin Jr.", "value": 75}, {"position": "TE", "rank": 9, "player_name": "Tucker Kraft", "value": 74}, {"position": "TE", "rank": 10, "player_name": "Dallas Goedert", "value": 74}, {"position": "TE", "rank": 11, "player_name": "Jake Ferguson", "value": 73}, {"position": "TE", "rank": 12, "player_name": "Travis Kelce", "value": 70}, {"position": "TE", "rank": 13, "player_name": "Dalton Kincaid", "value": 70}, {"position": "TE", "rank": 14, "player_name": "Mark Andrews", "value": 69}, {"position": "TE", "rank": 15, "player_name": "Isaiah Likely", "value": 69}, {"position": "TE", "rank": 16, "player_name": "T.J. Hockenson", "value": 68}, {"position": "TE", "rank": 17, "player_name": "Kenyon Sadiq", "value": 66}, {"position": "TE", "rank": 18, "player_name": "Hunter Henry", "value": 65}, {"position": "D/ST", "rank": 1, "player_name": "Texans", "value": null}, {"position": "D/ST", "rank": 2, "player_name": "Seahawks", "value": null}, {"position": "D/ST", "rank": 3, "player_name": "Broncos", "value": null}, {"position": "D/ST", "rank": 4, "player_name": "Rams", "value": null}, {"position": "D/ST", "rank": 5, "player_name": "Steelers", "value": null}, {"position": "D/ST", "rank": 6, "player_name": "Ravens", "value": null}, {"position": "D/ST", "rank": 7, "player_name": "Eagles", "value": null}, {"position": "D/ST", "rank": 8, "player_name": "Lions", "value": null}, {"position": "D/ST", "rank": 9, "player_name": "Packers", "value": null}, {"position": "D/ST", "rank": 10, "player_name": "Browns", "value": null}, {"position": "K", "rank": 1, "player_name": "Brandon Aubrey", "value": null}, {"position": "K", "rank": 2, "player_name": "Ka'imi Fairbairn", "value": null}, {"position": "K", "rank": 3, "player_name": "Cameron Dicker", "value": null}, {"position": "K", "rank": 4, "player_name": "Jason Myers", "value": null}, {"position": "K", "rank": 5, "player_name": "Cam Little", "value": null}, {"position": "K", "rank": 6, "player_name": "Jake Bates", "value": null}, {"position": "K", "rank": 7, "player_name": "Harrison Butker", "value": null}, {"position": "K", "rank": 8, "player_name": "Harrison Mevis", "value": null}];
 let P=[],filter="ALL",authed=false;
@@ -150,38 +150,50 @@ function gr(x){
 }
 
 function gradeTrade(){
-  if(!selected("A").length||!selected("B").length)
-    return alert("Select players on both sides.");
+  try{
+    const aNames=selected("A"), bNames=selected("B");
+    if(!aNames.length || !bNames.length){
+      alert("Select at least one player on both sides.");
+      return;
+    }
 
-  const a=total("A"), b=total("B");
-  const m=Math.max(a,b);
-  const x=m?Math.round(a/m*100):100;
-  const y=m?Math.round(b/m*100):100;
+    const a=total("A"), b=total("B");
+    const m=Math.max(a,b);
+    const x=m?Math.round(a/m*100):100;
+    const y=m?Math.round(b/m*100):100;
 
-  ga.textContent=gr(x);
-  gb.textContent=gr(y);
+    document.getElementById("ga").textContent=gr(x);
+    document.getElementById("gb").textContent=gr(y);
 
-  const rawA=rawTotal("A"), rawB=rawTotal("B");
-  va.textContent="Trade score: "+a.toFixed(1)+" · Listed value: "+rawA;
-  vb.textContent="Trade score: "+b.toFixed(1)+" · Listed value: "+rawB;
+    const rawA=rawTotal("A"), rawB=rawTotal("B");
+    document.getElementById("va").textContent="Trade score: "+a.toFixed(1)+" · Listed value: "+rawA;
+    document.getElementById("vb").textContent="Trade score: "+b.toFixed(1)+" · Listed value: "+rawB;
 
-  const ratio=Math.min(a,b)/Math.max(a,b);
-  let message;
+    const ratio=Math.min(a,b)/Math.max(a,b);
+    let message;
+    if(ratio>=0.96) message="🤝 Very close trade";
+    else if(ratio>=0.90) message="⚖️ Competitive trade";
+    else if(ratio>=0.82) message="📈 Noticeable advantage";
+    else if(ratio>=0.70) message="⚠️ Significant advantage";
+    else message="🚨 Major mismatch";
 
-  if(ratio>=0.96) message="🤝 Very close trade";
-  else if(ratio>=0.90) message="⚖️ Competitive trade";
-  else if(ratio>=0.82) message="📈 Noticeable advantage";
-  else if(ratio>=0.70) message="⚠️ Significant advantage";
-  else message="🚨 Major mismatch";
+    if(Math.abs(a-b)<0.0001) message="🤝 Essentially even!";
+    else message+=(a>b?" Team A has the advantage.":" Team B has the advantage.");
 
-  const winner=a>b?" Team A has the advantage.":" Team B has the advantage.";
-  if(Math.abs(a-b)<0.0001) message="🤝 Essentially even!";
-  else message+=winner;
-
-  win.textContent=message;
-  document.getElementById("feedbackText").textContent=buildTradeFeedback();
-  res.style.display="block";
+    document.getElementById("win").textContent=message;
+    const fb=document.getElementById("feedbackText");
+    if(fb) fb.textContent=buildTradeFeedback();
+    document.getElementById("res").style.display="block";
+    document.getElementById("res").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(err){
+    console.error(err);
+    const res=document.getElementById("res");
+    res.style.display="block";
+    document.getElementById("win").textContent="⚠️ The trade could not be graded. Please refresh and try again.";
+  }
 }
+window.gradeTrade=gradeTrade;
+
 function render(){let q=n(rs.value),f=P.filter(p=>(filter==="ALL"||p.position===filter)&&(!q||n(p.player_name).includes(q))),g={};f.forEach(p=>(g[p.position]??=[]).push(p));list.innerHTML=["QB","RB","WR","TE","D/ST","K"].filter(x=>g[x]).map(x=>'<div class="box"><div class="head">'+x+'</div>'+g[x].map(p=>'<div class="row"><span>#'+p.rank+'</span><span>'+p.player_name+'</span><b>'+(p.value==null?"—":p.value)+'</b></div>').join("")+'</div>').join("")}
 ["ALL","QB","RB","WR","TE","D/ST","K"].forEach(x=>{let b=document.createElement("button");b.textContent=x;if(x==="ALL")b.className="active";b.onclick=()=>{filter=x;document.querySelectorAll("#fs button").forEach(z=>z.classList.remove("active"));b.classList.add("active");render()};fs.appendChild(b)});
 async function load(){
@@ -253,5 +265,11 @@ am.textContent="❌ "+e.message;
 }
 }
 
-window.addEventListener("load",async()=>{searchBox("A");searchBox("B");await load()});
+window.addEventListener("load",async()=>{
+  searchBox("A");
+  searchBox("B");
+  const gradeBtn=document.getElementById("gradeBtn");
+  if(gradeBtn) gradeBtn.addEventListener("click",window.gradeTrade);
+  await load();
+});
 </script></body></html>
