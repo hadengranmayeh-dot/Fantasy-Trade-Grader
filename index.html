@@ -62,7 +62,59 @@ function renderNeedPositions(){document.getElementById('needPositions').innerHTM
 function renderWilling(){const host=document.getElementById('willing');host.innerHTML='';searchBox('willing','willing');let input=host.querySelector('input');let sug=input.nextElementSibling;input.oninput=()=>{let q=n(input.value);if(!q){sug.style.display='none';return}let chosen=new Set([...host.querySelectorAll('.sel')].map(x=>n(x.dataset.name)));let m=P.filter(p=>p.value!=null&&!chosen.has(n(p.player_name))&&n(p.player_name).includes(q)).slice(0,10);sug.innerHTML=m.map((p,j)=>'<div data-j="'+j+'"><b>'+p.player_name+'</b> <small>'+p.position+' · #'+p.rank+' · '+p.value+'</small></div>').join('')||'<div>No player found</div>';sug.style.display='block';sug.querySelectorAll('[data-j]').forEach(x=>x.onmousedown=e=>{e.preventDefault();let p=m[+x.dataset.j];addFinderWilling(p);input.value='';sug.style.display='none'})}}
 function addFinderWilling(p){const host=document.getElementById('willing');if([...host.querySelectorAll('.sel')].some(x=>n(x.dataset.name)===n(p.player_name)))return;let r=document.createElement('div');r.className='sel';r.dataset.name=p.player_name;r.innerHTML='<span>'+p.player_name+' <small>'+p.position+' · '+p.value+'</small></span><button>×</button>';r.querySelector('button').onclick=()=>r.remove();let s=host.querySelector('.search');host.insertBefore(r,s)}
 function refreshFinderWilling(){}
-function findTrades(){const need=[...document.querySelectorAll('#needPositions input:checked')].map(x=>x.value);const give=[...document.querySelectorAll('#willing .sel')].map(x=>x.dataset.name);if(!need.length)return alert('Choose at least one position you need.');if(!give.length)return alert('Choose at least one player you are willing to trade.');const giveValue=totalNames(give);const excluded=new Set(give.map(n));const primary=need[0];const pool=P.filter(p=>p.value!=null&&!excluded.has(n(p.player_name)));const candidates=[];function combos(arr,start,k,current){if(current.length===k){const names=current.map(p=>p.player_name),v=totalNames(names),gap=Math.abs(v-giveValue)/Math.max(v,giveValue);const counts={};names.forEach(name=>{const p=byName(name);counts[p.position]=(counts[p.position]||0)+1});const primaryCount=counts[primary]||0;const needCovered=need.filter(pos=>counts[pos]>0).length;const otherPositions=Object.keys(counts).filter(pos=>pos!==primary).length;const extraPrimary=Math.max(0,primaryCount-1);const samePosExtras=Object.values(counts).reduce((sum,c)=>sum+Math.max(0,c-1),0);if((k>1&&otherPositions<1)||(k===3&&Object.keys(counts).length<3))return;const rosterPenalty=(k-1)*0.012;const primaryMissing=primaryCount===0?0.65:0;const extraPrimaryPenalty=extraPrimary*0.24;const samePositionPenalty=samePosExtras*0.08;const diversityBonus=otherPositions>0&&k>1?-0.045:0;const coverageBonus=needCovered>1?-(needCovered-1)*0.08:0;const score=gap+rosterPenalty+primaryMissing+extraPrimaryPenalty+samePositionPenalty+diversityBonus+coverageBonus;candidates.push({names,value:v,gap,score,primaryCount,needCovered});return}for(let i=start;i<arr.length;i++){current.push(arr[i]);combos(arr,i+1,k,current);current.pop()}}for(let k=1;k<=3;k++)combos(pool,0,k,[]);candidates.sort((a,b)=>a.score-b.score);const unique=[];const seen=new Set();for(const c of candidates){const key=c.names.slice().sort().join('|');if(!seen.has(key)&&c.primaryCount>0){seen.add(key);unique.push(c)}if(unique.length>=8)break}const out=document.getElementById('finderResults');out.innerHTML=unique.length?unique.map((c,i)=>'<div class=\"finderCard '+(i===0?'best':'')+'\"><div class=\"tradeLine\"><b>'+(i===0?'⭐ Best Match':'Recommended Match')+'</b><span>'+Math.round((1-c.gap)*100)+'% value match</span></div><p>'+c.names.join(' + ')+'</p><p class=\"muted small\">Package model value: '+c.value.toFixed(1)+' · Your give-away value: '+giveValue.toFixed(1)+' · Prioritizing your '+primary+' need</p><button class=\"primary\" onclick=\"sendFinderToAnalyzer('+JSON.stringify(give)+','+JSON.stringify(c.names)+')\">Analyze This Trade</button></div>').join(''):'<div class=\"feedback\">No close package found. Try selecting another position or another player to trade.</div>'}
+function findTrades(){
+ const need=[...document.querySelectorAll('#needPositions input:checked')].map(x=>x.value);
+ const give=[...document.querySelectorAll('#willing .sel')].map(x=>x.dataset.name);
+ const out=document.getElementById('finderResults');
+ if(!need.length){alert('Choose at least one position you need.');return;}
+ if(!give.length){alert('Choose at least one player you are willing to trade.');return;}
+ const giveValue=totalNames(give), primary=need[0], excluded=new Set(give.map(n));
+ const valueMap=new Map(P.filter(p=>p.value!=null).map(p=>[n(p.player_name),tv(p.player_name)]));
+ const byPos={};
+ P.filter(p=>p.value!=null&&!excluded.has(n(p.player_name))).forEach(p=>{
+   (byPos[p.position]??=[]).push(p);
+ });
+ Object.keys(byPos).forEach(pos=>byPos[pos].sort((a,b)=>valueMap.get(n(b.player_name))-valueMap.get(n(a.player_name))));
+ // Keep the search fast while still considering the strongest realistic options.
+ Object.keys(byPos).forEach(pos=>byPos[pos]=byPos[pos].slice(0,18));
+ const candidates=[];
+ const addCandidate=(players)=>{
+   const names=players.map(p=>p.player_name);
+   const vals=players.map(p=>valueMap.get(n(p.player_name))||0);
+   let v=vals.reduce((a,b)=>a+b,0);
+   if(players.length>1)v*=Math.pow(0.91,players.length-1);
+   const gap=Math.abs(v-giveValue)/Math.max(v,giveValue);
+   const counts={}; players.forEach(p=>counts[p.position]=(counts[p.position]||0)+1);
+   const primaryCount=counts[primary]||0;
+   if(!primaryCount)return;
+   const positions=Object.keys(counts);
+   const otherPositions=positions.filter(x=>x!==primary).length;
+   if(players.length>1 && otherPositions<1)return;
+   if(players.length===3 && positions.length<3)return;
+   const extraPrimary=Math.max(0,primaryCount-1);
+   const samePosExtras=Object.values(counts).reduce((sum,c)=>sum+Math.max(0,c-1),0);
+   const needCovered=need.filter(pos=>counts[pos]>0).length;
+   const score=gap+(players.length-1)*0.012+extraPrimary*0.24+samePosExtras*0.08-otherPositions*0.045-(needCovered-1)*0.08;
+   candidates.push({names,value:v,gap,score,primaryCount,needCovered});
+ };
+ const prim=byPos[primary]||[];
+ // 1-player: primary need only.
+ prim.forEach(p=>addCandidate([p]));
+ // 2-player: primary + one different position, prioritizing other needs.
+ const otherOrder=[...need.filter(x=>x!==primary),...Object.keys(byPos).filter(x=>x!==primary&&!need.includes(x))];
+ otherOrder.forEach(pos=>(byPos[pos]||[]).slice(0,12).forEach(q=>prim.slice(0,18).forEach(p=>addCandidate([p,q]))));
+ // 3-player: primary + two different positions. This creates realistic mixed packages.
+ for(let i=0;i<otherOrder.length;i++){
+   for(let j=i+1;j<otherOrder.length;j++){
+     const a=byPos[otherOrder[i]]||[],b=byPos[otherOrder[j]]||[];
+     prim.slice(0,18).forEach(p=>a.slice(0,10).forEach(q=>b.slice(0,10).forEach(r=>addCandidate([p,q,r]))));
+   }
+ }
+ candidates.sort((a,b)=>a.score-b.score);
+ const unique=[],seen=new Set();
+ for(const c of candidates){const key=c.names.slice().sort().join('|');if(!seen.has(key)){seen.add(key);unique.push(c)}if(unique.length>=8)break;}
+ out.innerHTML=unique.length?unique.map((c,i)=>'<div class="finderCard '+(i===0?'best':'')+'"><div class="tradeLine"><b>'+(i===0?'⭐ Best Match':'Recommended Match')+'</b><span>'+Math.round((1-c.gap)*100)+'% value match</span></div><p><b>'+c.names.join(' + ')+'</b></p><p class="muted small">Model value: '+c.value.toFixed(1)+' · Your give-away: '+giveValue.toFixed(1)+' · Primary need: '+primary+'</p><button class="primary" onclick="sendFinderToAnalyzer('+JSON.stringify(give)+','+JSON.stringify(c.names)+')">Analyze This Trade</button></div>').join(''):'<div class="feedback">No realistic close package found. Try another player or position need.</div>';
+}
 function sendFinderToAnalyzer(give,get){document.getElementById('A').innerHTML='';document.getElementById('B').innerHTML='';searchBox('A');searchBox('B');give.forEach(x=>add('A',byName(x)));get.forEach(x=>add('B',byName(x)));tab('trade');gradeTrade()}
 async function load(){
   try{
