@@ -46,6 +46,77 @@ function searchBox(t,hostId=t){let d=document.createElement('div');d.className='
 function setup(i,t){let b=i.nextElementSibling;i.oninput=()=>{let q=n(i.value);if(!q){b.style.display='none';return}let ch=new Set(selected(t).map(n)),m=P.filter(p=>!ch.has(n(p.player_name))&&n(p.player_name).includes(q)).slice(0,10);b.innerHTML=m.length?m.map((p,j)=>'<div data-j="'+j+'"><b>'+p.player_name+'</b> <small>'+p.position+' · #'+p.rank+(p.value==null?'':' · '+p.value)+'</small></div>').join(''):'<div>No player found</div>';b.style.display='block';b.querySelectorAll('[data-j]').forEach(x=>x.onmousedown=e=>{e.preventDefault();add(t,m[+x.dataset.j])})};i.onblur=()=>setTimeout(()=>b.style.display='none',150)}
 function add(t,p){if(!p||selected(t).map(n).includes(n(p.player_name)))return;let r=document.createElement('div');r.className='sel';r.dataset.name=p.player_name;r.innerHTML='<span>'+p.player_name+' <small>'+p.position+(p.value==null?'':' · '+p.value)+'</small></span><button>×</button>';r.querySelector('button').onclick=()=>{r.remove();refreshFinderWilling()};let box=document.getElementById(t),s=box.querySelector('.search');box.insertBefore(r,s||null);if(!s)searchBox(t);}
 function addBox(t){searchBox(t)}
+function renderNeedPositions(){
+  const el=document.getElementById('needPositions');
+  if(!el)return;
+  const positions=['QB','RB','WR','TE'];
+  el.innerHTML=positions.map(pos=>
+    '<label class="check"><input type="checkbox" value="'+pos+'"> '+pos+'</label>'
+  ).join('');
+}
+function renderWilling(){
+  const el=document.getElementById('willing');
+  if(!el)return;
+  el.innerHTML='';
+  searchBox('willing');
+}
+function refreshFinderWilling(){renderWilling();}
+function findTrades(){
+  const need=[...document.querySelectorAll('#needPositions input:checked')].map(x=>x.value);
+  const willing=selected('willing');
+  const out=document.getElementById('finderResults');
+  if(!out)return;
+  if(!need.length){out.innerHTML='<div class="msg">Choose at least one position you need.</div>';return;}
+  if(!willing.length){out.innerHTML='<div class="msg">Choose at least one player you are willing to trade.</div>';return;}
+
+  const available=P.filter(p=>p.value!=null&&!willing.map(n).includes(n(p.player_name)));
+  const packages=[];
+  const combos=(arr,k,start=0,prefix=[])=>{
+    if(prefix.length===k){packages.push(prefix.slice());return;}
+    for(let i=start;i<arr.length;i++)combos(arr,k,i+1,prefix.concat(arr[i]));
+  };
+
+  // Prefer the user's primary need and avoid repetitive TE-heavy packages.
+  for(const size of [1,2,3]){
+    const pool=available.filter(p=>need.includes(p.position)||size>1);
+    const limited=pool.slice(0,60);
+    const candidates=[];
+    combos(limited,size).forEach(pkg=>{
+      const needCount=pkg.filter(p=>need.includes(p.position)).length;
+      if(needCount===0)return;
+      const value=totalNames(willing);
+      const got=totalNames(pkg.map(p=>p.player_name));
+      const balance=Math.abs(value-got)/(Math.max(value,got)||1);
+      const diversity=new Set(pkg.map(p=>p.position)).size;
+      const score=balance*100-needCount*12-diversity*2;
+      candidates.push({pkg,score,needCount});
+    });
+    candidates.sort((a,b)=>a.score-b.score);
+    candidates.slice(0,8).forEach(x=>packages.push({finder:x.pkg}));
+  }
+
+  const seen=new Set(), results=[];
+  for(const item of packages){
+    const pkg=item.finder||item;
+    if(!Array.isArray(pkg))continue;
+    const key=pkg.map(p=>p.player_name).sort().join('|');
+    if(seen.has(key))continue;seen.add(key);
+    const needCount=pkg.filter(p=>need.includes(p.position)).length;
+    if(!needCount)continue;
+    results.push(pkg);
+    if(results.length>=6)break;
+  }
+  if(!results.length){out.innerHTML='<div class="msg">No realistic package found. Try another player or need.</div>';return;}
+  out.innerHTML='<h3>Recommended Trades</h3>'+results.map((pkg,i)=>
+    '<div class="profile" style="margin-top:10px"><b>Option '+(i+1)+'</b>'+
+    '<div class="stat">You give: '+willing.map(x=>x).join(', ')+'</div>'+
+    '<div class="stat">You receive: '+pkg.map(p=>p.player_name+' ('+p.position+' · '+p.value+')').join(', ')+'</div>'+
+    '<div class="stat">Primary need addressed: '+pkg.filter(p=>need.includes(p.position)).map(p=>p.position).join(', ')+'</div>'+
+    '</div>'
+  ).join('');
+}
+window.findTrades=findTrades;
+
 function rankInfluence(rank){if(rank<=10)return 0.0035;if(rank<=20)return 0.0025;if(rank<=30)return 0.0015;if(rank<=40)return 0.0007;return 0.00025}
 function tv(name){const p=byName(name);if(!p||p.value==null)return 0;const value=p.value;const rankTie=(50-p.rank)*rankInfluence(p.rank);const base=value+rankTie;const nonlinear=Math.pow(1.078,base-60);const elite=value>=95?1.10:value>=90?1.07:value>=85?1.04:value>=80?1.02:1;const track=trackRecord.has(p.player_name)?1.025:1;return nonlinear*elite*track}
 function totalNames(names){let total=names.reduce((a,x)=>a+tv(x),0);if(names.length>1)total*=Math.pow(0.91,names.length-1);return total}
@@ -258,10 +329,19 @@ window.openProfile=openProfile;
 
 function renderProfileDirectoryStatic(){
   const el=document.getElementById('profileDirectory');if(!el)return;
-  el.innerHTML=P.map((p,i)=>'<button type="button" class="chip" style="margin:3px" onclick="openProfile('+JSON.stringify(p.player_name)+')">'+p.player_name+'</button>').join('');
+  el.innerHTML=P.map((p,i)=>'<button type="button" class="chip" style="margin:3px" data-profile-index="'+i+'">'+p.player_name+'</button>').join('');
+  if(!el.dataset.bound){
+    el.dataset.bound='1';
+    el.addEventListener('click',e=>{
+      const b=e.target.closest('[data-profile-index]');
+      if(!b)return;
+      const p=P[Number(b.dataset.profileIndex)];
+      if(p)openProfile(p.player_name);
+    });
+  }
 }
 window.addEventListener('load',async()=>{
-  const profileBtn=document.getElementById('viewProfileBtn'); if(profileBtn)profileBtn.addEventListener('click',window.showProfileNative);
+  const profileBtn=document.getElementById('viewProfileBtn'); if(profileBtn&&!profileBtn.dataset.bound){profileBtn.dataset.bound='1';profileBtn.addEventListener('click',e=>{e.preventDefault();window.showProfileNative();});}
   try{
     setupFilters();searchBox('A');searchBox('B');renderNeedPositions();renderWilling();
     renderProfileDirectoryStatic();
