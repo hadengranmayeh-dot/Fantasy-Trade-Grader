@@ -47,71 +47,60 @@ function setup(i,t){let b=i.nextElementSibling;i.oninput=()=>{let q=n(i.value);i
 function add(t,p){if(!p||selected(t).map(n).includes(n(p.player_name)))return;let r=document.createElement('div');r.className='sel';r.dataset.name=p.player_name;r.innerHTML='<span>'+p.player_name+' <small>'+p.position+(p.value==null?'':' · '+p.value)+'</small></span><button>×</button>';r.querySelector('button').onclick=()=>{r.remove();refreshFinderWilling()};let box=document.getElementById(t),s=box.querySelector('.search');box.insertBefore(r,s||null);if(!s)searchBox(t);}
 function addBox(t){searchBox(t)}
 function renderNeedPositions(){
-  const el=document.getElementById('needPositions');
-  if(!el)return;
-  const positions=['QB','RB','WR','TE'];
-  el.innerHTML=positions.map(pos=>
-    '<label class="check"><input type="checkbox" value="'+pos+'"> '+pos+'</label>'
+  const el=document.getElementById('needPositions'); if(!el)return;
+  el.innerHTML=['QB','RB','WR','TE'].map(pos=>
+    '<button type="button" class="chip finder-pos" data-pos="'+pos+'">'+pos+'</button>'
   ).join('');
+  el.querySelectorAll('[data-pos]').forEach(btn=>btn.onclick=()=>{
+    btn.classList.toggle('active');
+    btn.style.background=btn.classList.contains('active')?'#6d5dfc':'';
+  });
 }
 function renderWilling(){
-  const el=document.getElementById('willing');
-  if(!el)return;
+  const el=document.getElementById('willing'); if(!el)return;
   el.innerHTML='';
   searchBox('willing');
 }
-function refreshFinderWilling(){renderWilling();}
 function findTrades(){
-  const need=[...document.querySelectorAll('#needPositions input:checked')].map(x=>x.value);
+  const need=[...document.querySelectorAll('#needPositions [data-pos].active')].map(x=>x.dataset.pos);
   const willing=selected('willing');
-  const out=document.getElementById('finderResults');
-  if(!out)return;
+  const out=document.getElementById('finderResults'); if(!out)return;
   if(!need.length){out.innerHTML='<div class="msg">Choose at least one position you need.</div>';return;}
-  if(!willing.length){out.innerHTML='<div class="msg">Choose at least one player you are willing to trade.</div>';return;}
+  if(!willing.length){out.innerHTML='<div class="msg">Search for and select at least one player you are willing to trade.</div>';return;}
 
-  const available=P.filter(p=>p.value!=null&&!willing.map(n).includes(n(p.player_name)));
-  const packages=[];
-  const combos=(arr,k,start=0,prefix=[])=>{
-    if(prefix.length===k){packages.push(prefix.slice());return;}
-    for(let i=start;i<arr.length;i++)combos(arr,k,i+1,prefix.concat(arr[i]));
-  };
-
-  // Prefer the user's primary need and avoid repetitive TE-heavy packages.
-  for(const size of [1,2,3]){
-    const pool=available.filter(p=>need.includes(p.position)||size>1);
-    const limited=pool.slice(0,60);
-    const candidates=[];
-    combos(limited,size).forEach(pkg=>{
-      const needCount=pkg.filter(p=>need.includes(p.position)).length;
-      if(needCount===0)return;
-      const value=totalNames(willing);
+  const give=totalNames(willing);
+  const candidates=P.filter(p=>p.value!=null&&!willing.some(w=>n(w)===n(p.player_name)));
+  const scored=[];
+  for(let i=0;i<candidates.length;i++){
+    for(let j=i;j<candidates.length;j++){
+      const pkg=j===i?[candidates[i]]:[candidates[i],candidates[j]];
+      const hits=pkg.filter(p=>need.includes(p.position)).length;
+      if(!hits)continue;
+      // Avoid boring same-position packages when another position can balance it.
+      const positions=new Set(pkg.map(p=>p.position));
+      if(pkg.length===2 && positions.size===1 && need.includes(pkg[0].position))continue;
       const got=totalNames(pkg.map(p=>p.player_name));
-      const balance=Math.abs(value-got)/(Math.max(value,got)||1);
-      const diversity=new Set(pkg.map(p=>p.position)).size;
-      const score=balance*100-needCount*12-diversity*2;
-      candidates.push({pkg,score,needCount});
-    });
-    candidates.sort((a,b)=>a.score-b.score);
-    candidates.slice(0,8).forEach(x=>packages.push({finder:x.pkg}));
+      const balance=Math.abs(give-got)/(Math.max(give,got)||1);
+      const diversityBonus=positions.size>1?5:0;
+      const score=balance*100-hits*20-diversityBonus;
+      scored.push({pkg,score});
+    }
   }
-
-  const seen=new Set(), results=[];
-  for(const item of packages){
-    const pkg=item.finder||item;
-    if(!Array.isArray(pkg))continue;
-    const key=pkg.map(p=>p.player_name).sort().join('|');
-    if(seen.has(key))continue;seen.add(key);
-    const needCount=pkg.filter(p=>need.includes(p.position)).length;
-    if(!needCount)continue;
-    results.push(pkg);
+  scored.sort((a,b)=>a.score-b.score);
+  const results=[],seen=new Set();
+  for(const x of scored){
+    const key=x.pkg.map(p=>p.player_name).sort().join('|');
+    if(seen.has(key))continue;
+    seen.add(key);results.push(x.pkg);
     if(results.length>=6)break;
   }
-  if(!results.length){out.innerHTML='<div class="msg">No realistic package found. Try another player or need.</div>';return;}
+  if(!results.length){out.innerHTML='<div class="msg">No realistic package found. Try another need or trade-away player.</div>';return;}
   out.innerHTML='<h3>Recommended Trades</h3>'+results.map((pkg,i)=>
-    '<div class="profile" style="margin-top:10px"><b>Option '+(i+1)+'</b>'+
-    '<div class="stat">You give: '+willing.map(x=>x).join(', ')+'</div>'+
-    '<div class="stat">You receive: '+pkg.map(p=>p.player_name+' ('+p.position+' · '+p.value+')').join(', ')+'</div>'+
-    '<div class="stat">Primary need addressed: '+pkg.filter(p=>need.includes(p.position)).map(p=>p.position).join(', ')+'</div>'+
+    '<div class="finderCard '+(i===0?'best':'')+'">'+
+    '<b>Option '+(i+1)+'</b>'+
+    '<div class="tradeLine"><span>You give</span><b>'+willing.join(', ')+'</b></div>'+
+    '<div class="tradeLine"><span>You receive</span><b>'+pkg.map(p=>p.player_name+' ('+p.position+' · '+p.value+')').join(', ')+'</b></div>'+
+    '<div class="msg">Addresses: '+pkg.filter(p=>need.includes(p.position)).map(p=>p.position).join(', ')+'</div>'+
     '</div>'
   ).join('');
 }
@@ -244,108 +233,25 @@ function comparePlayersStatic(){
     '<div class="feedback" style="margin-top:12px"><b>'+better.player_name+'</b> has the higher trade-model value by '+diff.toFixed(1)+' points. '+compareExplanation(a,b)+'</div>';
 }
 
-function renderProfileDirectoryStatic(){
-  const el=document.getElementById('profileDirectory');if(!el)return;
-  el.innerHTML=P.length?P.map((p,i)=>'<button type="button" class="chip" style="margin:3px" data-profile-i="'+i+'">'+p.player_name+'</button>').join(''):'<div class="muted">Loading your rankings…</div>';
-  el.querySelectorAll('[data-profile-i]').forEach(b=>b.onclick=()=>openProfile(P[+b.dataset.profileI].player_name));
-}
-
-function setupStaticProfiles(){
-  setupStaticPlayerSearch('profileInput','profileSug','P');
-  renderProfileDirectoryStatic();
-  const inp=document.getElementById('profileInput'),sug=document.getElementById('profileSug');
-  if(inp)sug&&sug.addEventListener('mousedown',()=>{});
-}
-
-function comparePlayers(){
-  const aSel=[...document.querySelectorAll('#cmpA .sel')].map(x=>x.dataset.name)[0];
-  const bSel=[...document.querySelectorAll('#cmpB .sel')].map(x=>x.dataset.name)[0];
-  const aInput=document.querySelector('#cmpA .search input')?.value||'';
-  const bInput=document.querySelector('#cmpB .search input')?.value||'';
-  const pa=byName(aSel||aInput), pb=byName(bSel||bInput);
-  if(!pa||!pb){alert('Select one player in each comparison box.');return;}
-  compareA=pa;compareB=pb;
-  document.getElementById('compareOut').innerHTML='<div class="two">'+
-  '<div class="profile"><h3>'+pa.player_name+'</h3><div class="stat">'+pa.position+' · Rank #'+pa.rank+'</div><div class="stat">Value: <b>'+(pa.value??'—')+'</b></div><div class="stat">'+(seasonStats[pa.player_name]||'No production note added yet.')+'</div></div>'+
-  '<div class="profile"><h3>'+pb.player_name+'</h3><div class="stat">'+pb.position+' · Rank #'+pb.rank+'</div><div class="stat">Value: <b>'+(pb.value??'—')+'</b></div><div class="stat">'+(seasonStats[pb.player_name]||'No production note added yet.')+'</div></div>'+
-  '</div><div class="feedback">'+compareExplanation(pa,pb)+'</div>';
-}
-
-function compareExplanation(a,b){if(a.value==null||b.value==null)return'One or both players do not have a fantasy value in your rankings.';const high=a.value>b.value?a:b,low=a.value>b.value?b:a;let text=high.player_name+' has the higher listed value ('+high.value+' vs. '+low.value+'). ';if(Math.abs(a.rank-b.rank)>10)text+='The model treats the ranking gap as a smaller signal once players are deeper in the rankings, so value is doing most of the work here.';return text}
-const profileDb={};
-function ageFromBirth(b){if(!b)return null;const d=new Date(b+'T00:00:00');if(Number.isNaN(d.getTime()))return null;const now=new Date();let age=now.getFullYear()-d.getFullYear();const m=now.getMonth()-d.getMonth();if(m<0||(m===0&&now.getDate()<d.getDate()))age--;return age}
-function csvRows(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],nxt=text[i+1];if(c==='"'&&q&&nxt==='"'){cell+='"';i++;continue}if(c==='"'){q=!q;continue}if(c===','&&!q){row.push(cell);cell='';continue}if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&nxt==='\n')i++;row.push(cell);cell='';if(row.some(x=>x!==''))rows.push(row);row=[];continue}cell+=c}row.push(cell);if(row.some(x=>x!==''))rows.push(row);if(!rows.length)return[];const h=rows[0].map(x=>x.trim());return rows.slice(1).map(r=>Object.fromEntries(h.map((k,i)=>[k,(r[i]??'').trim()])))}
-function pick(o,keys){for(const k of keys){if(o&&o[k]!==undefined&&o[k]!==''&&o[k]!==null)return o[k]}return null}
-function statText(p,st){if(!st)return seasonStats[p.player_name]||'No 2025 production data found.';const pos=p.position;const fmt=(x)=>x==null||x===''||x==='NA'?'—':Number(x).toLocaleString();if(pos==='QB'){return fmt(pick(st,['passing_yards']))+' passing yards · '+fmt(pick(st,['passing_tds']))+' pass TDs · '+fmt(pick(st,['interceptions']))+' INTs · '+fmt(pick(st,['rushing_yards']))+' rush yards · '+fmt(pick(st,['rushing_tds']))+' rush TDs';}return fmt(pick(st,['receptions']))+' receptions · '+fmt(pick(st,['receiving_yards']))+' receiving yards · '+fmt(pick(st,['receiving_tds']))+' receiving TDs · '+fmt(pick(st,['rushing_yards']))+' rush yards · '+fmt(pick(st,['rushing_tds']))+' rush TDs';}
-function renderProfileDirectory(){
-  const host=document.getElementById('profileDirectory');
-  if(!host) return;
-  const groups={};
-  P.filter(p=>p.value!=null).forEach(p=>(groups[p.position]??=[]).push(p));
-  host.innerHTML=Object.entries(groups).map(([pos,arr])=>'<div class="box" style="margin-bottom:12px"><div class="head">'+pos+'</div>'+arr.map(p=>'<div class="row clickable" data-name="'+encodeURIComponent(p.player_name)+'"><span>#'+p.rank+'</span><span>'+p.player_name+'</span><b>'+p.value+'</b></div>').join('')+'</div>').join('');
-  host.querySelectorAll('[data-name]').forEach(el=>el.onclick=()=>openProfile(decodeURIComponent(el.dataset.name)));
-}
-const profileFallback={
-  "josh allen":{team:"Buffalo Bills",college:"University of Wyoming",age:"30",height:"6'5\"",stats:"2025 regular season: 3,668 passing yards, 25 passing TDs, 10 INTs"}
-};
-function openProfile(name){
-  const p=byName(name); if(!p)return;
-  const d=profileFallback[n(p.player_name)]||{};
-  const out=document.getElementById('profileOut'); if(!out)return;
-  out.innerHTML=
-    '<div class="profile">'+
-    '<h2>'+p.player_name+'</h2>'+
-    '<div class="pill">'+p.position+'</div>'+
-    '<div class="pill">Rank #'+p.rank+'</div>'+
-    '<div class="pill">Value '+(p.value??'—')+'</div>'+
-    '<div class="two" style="margin-top:12px">'+
-      '<div class="stat"><b>Current Team</b><br>'+(d.team||'Information coming soon')+'</div>'+
-      '<div class="stat"><b>Age</b><br>'+(d.age||'Information coming soon')+'</div>'+
-      '<div class="stat"><b>Height</b><br>'+(d.height||'Information coming soon')+'</div>'+
-      '<div class="stat"><b>College / Alumni</b><br>'+(d.college||'Information coming soon')+'</div>'+
-    '</div>'+
-    '<div class="stat"><b>2025 Regular-Season Stats</b><br>'+(d.stats||seasonStats[p.player_name]||'Information coming soon')+'</div>'+
-    '<div class="stat"><b>Fantasy Value</b><br>'+tv(p.player_name).toFixed(1)+'</div>'+
-    '<div class="stat"><b>Fantasy Analysis</b><br>'+
-      (p.rank<=20?'Elite-tier player in your rankings.':p.rank<=40?'Strong player; value is the main signal.':'Value matters more than exact ranking at this depth.')+
-    '</div></div>';
-}
-
-function showProfileNative(){
-  const input=document.getElementById('profileInput');
-  const raw=(input?.value||'').trim();
-  if(!raw){alert('Search for a player first.');return;}
-  let p=byName(raw)||P.find(x=>n(x.player_name)===n(raw));
-  if(!p){
-    const matches=P.filter(x=>n(x.player_name).includes(n(raw)));
-    if(matches.length===1)p=matches[0];
-  }
-  if(!p){alert('Choose a player from the recommendations.');return;}
-  input.value=p.player_name;
-  openProfile(p.player_name);
-}
-window.showProfileNative=showProfileNative;
 window.openProfile=openProfile;
-
 function renderProfileDirectoryStatic(){
   const el=document.getElementById('profileDirectory');if(!el)return;
-  el.innerHTML=P.map((p,i)=>'<button type="button" class="chip" style="margin:3px" data-profile-index="'+i+'">'+p.player_name+'</button>').join('');
-  if(!el.dataset.bound){
-    el.dataset.bound='1';
-    el.addEventListener('click',e=>{
-      const b=e.target.closest('[data-profile-index]');
-      if(!b)return;
-      const p=P[Number(b.dataset.profileIndex)];
-      if(p)openProfile(p.player_name);
-    });
-  }
+  el.innerHTML=P.map(p=>
+    '<button type="button" class="chip" style="margin:3px" onclick="window.openProfile('+JSON.stringify(p.player_name)+')">'+
+    p.player_name+'</button>'
+  ).join('');
 }
-window.addEventListener('load',async()=>{
-  const profileBtn=document.getElementById('viewProfileBtn'); if(profileBtn&&!profileBtn.dataset.bound){profileBtn.dataset.bound='1';profileBtn.addEventListener('click',e=>{e.preventDefault();window.showProfileNative();});}
+
+window.addEventListener('load',()=>{
   try{
-    setupFilters();searchBox('A');searchBox('B');renderNeedPositions();renderWilling();
+    setupFilters();
+    searchBox('A');
+    searchBox('B');
+    renderNeedPositions();
+    renderWilling();
     renderProfileDirectoryStatic();
-    await load();
-    renderNeedPositions();renderWilling();renderProfileDirectoryStatic();
-  }catch(e){console.error(e);renderProfileDirectoryStatic();}
+    if(typeof setupStaticProfiles==='function')setupStaticProfiles();
+  }catch(e){
+    console.error('Fantasy Trade Grader startup error:',e);
+  }
 });</script><footer style="text-align:center;padding:24px 0 10px;color:#7f8aa8;font-size:13px">Created by Haden</footer></body></html>
