@@ -217,100 +217,27 @@ function renderProfileDirectory(){
 const profileFallback={
   "josh allen":{team:"Buffalo Bills",college:"University of Wyoming",age:"30",height:"6'5\"",stats:"2025 regular season: 3,668 passing yards, 25 passing TDs, 10 INTs"}
 };
-
-const profileFallback={
-  "josh allen":{
-    team:"Buffalo Bills",college:"University of Wyoming",age:"30",height:"6'5\"",
-    stats:"2025 regular season: 3,668 passing yards, 25 passing TDs, 10 INTs"
-  }
-};
-const profileData={};
-
-function formatProfileHeight(v){
-  if(v==null||v==='')return 'Not available';
-  const x=String(v).trim();
-  if(/^\d+$/.test(x)){const inches=Number(x);return Math.floor(inches/12)+"'"+(inches%12)+'"';}
-  return x;
-}
-const profileTeams={
-  ARI:"Arizona Cardinals",ATL:"Atlanta Falcons",BAL:"Baltimore Ravens",BUF:"Buffalo Bills",
-  CAR:"Carolina Panthers",CHI:"Chicago Bears",CIN:"Cincinnati Bengals",CLE:"Cleveland Browns",
-  DAL:"Dallas Cowboys",DEN:"Denver Broncos",DET:"Detroit Lions",GB:"Green Bay Packers",
-  HOU:"Houston Texans",IND:"Indianapolis Colts",JAX:"Jacksonville Jaguars",KC:"Kansas City Chiefs",
-  LV:"Las Vegas Raiders",LAC:"Los Angeles Chargers",LAR:"Los Angeles Rams",MIA:"Miami Dolphins",
-  MIN:"Minnesota Vikings",NE:"New England Patriots",NO:"New Orleans Saints",NYG:"New York Giants",
-  NYJ:"New York Jets",PHI:"Philadelphia Eagles",PIT:"Pittsburgh Steelers",SEA:"Seattle Seahawks",
-  SF:"San Francisco 49ers",TB:"Tampa Bay Buccaneers",TEN:"Tennessee Titans",WAS:"Washington Commanders"
-};
-function fullProfileTeam(v){return profileTeams[String(v||'').toUpperCase()]||v||'Not available';}
-function profileStats(p,s){
-  if(!s)return seasonStats[p.player_name]||'No 2025 production data available.';
-  const f=x=>x==null||x===''||x==='NA'?'—':Number(x).toLocaleString();
-  if(p.position==='QB')return f(pick(s,['passing_yards']))+' passing yards · '+f(pick(s,['passing_tds']))+' pass TDs · '+f(pick(s,['interceptions']))+' INTs · '+f(pick(s,['rushing_yards']))+' rush yards · '+f(pick(s,['rushing_tds']))+' rush TDs';
-  if(p.position==='K')return f(pick(s,['fg_made']))+' FGs · '+f(pick(s,['pat_made']))+' extra points';
-  return f(pick(s,['receptions']))+' receptions · '+f(pick(s,['receiving_yards']))+' receiving yards · '+f(pick(s,['receiving_tds']))+' receiving TDs · '+f(pick(s,['rushing_yards']))+' rush yards · '+f(pick(s,['rushing_tds']))+' rush TDs';
-}
-async function loadAllPlayerProfiles(){
-  const status=document.getElementById('profileStatus');
-  if(status)status.textContent='Loading profile information for all 144 players…';
-  try{
-    const urls=[
-      'https://github.com/nflverse/nflverse-data/releases/download/players/players.csv',
-      'https://github.com/nflverse/nflverse-data/releases/download/rosters/roster_2026.csv',
-      'https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_reg_2025.csv'
-    ];
-    const [a,b,c]=await Promise.all(urls.map(u=>fetch(u)));
-    if(!a.ok||!b.ok||!c.ok)throw new Error('Profile source unavailable');
-    const [players,rosters,stats]=await Promise.all([a.text(),b.text(),c.text()]);
-    const ps=csvRows(players),rs=csvRows(rosters),ss=csvRows(stats);
-    const rm=new Map(),sm=new Map();
-    rs.forEach(r=>{const name=pick(r,['full_name','player_display_name','player_name']);if(name)rm.set(n(name),r);});
-    ss.forEach(r=>{const name=pick(r,['player_display_name','player_name','full_name']);if(name)sm.set(n(name),r);});
-    ps.forEach(p=>{
-      const name=pick(p,['display_name','full_name','player_display_name','player_name']);
-      if(!name)return;
-      const r=rm.get(n(name))||{},s=sm.get(n(name))||null;
-      profileData[n(name)]={
-        team:fullProfileTeam(pick(r,['team','team_abbr','club_code'])||pick(s,['team'])),
-        age:ageFromBirth(pick(p,['birth_date','birthdate','dob'])),
-        height:formatProfileHeight(pick(p,['height','height_inches','height_in'])),
-        college:pick(p,['college_name','college','collegeName'])||pick(r,['college_name','college'])||'Not available',
-        draftYear:pick(p,['draft_year','draftYear']),
-        draftRound:pick(p,['draft_round','draftRound']),
-        draftPick:pick(p,['draft_pick','draftPick']),
-        experience:pick(p,['years_exp','years_experience','experience']),
-        stats:s
-      };
-    });
-    if(status)status.textContent='Profile information loaded for your ranked players.';
-  }catch(err){
-    console.warn('Profile data could not be loaded:',err);
-    if(status)status.textContent='Player profiles are ready. Some live details may be unavailable right now.';
-  }
-}
 function openProfile(name){
-  const p=byName(name);if(!p)return;
-  const d=profileData[n(p.player_name)]||profileFallback[n(p.player_name)]||{};
-  const out=document.getElementById('profileOut');if(!out)return;
-  const stats=profileStats(p,d.stats);
-  const career=d.draftYear
-    ?'Drafted '+d.draftYear+(d.draftRound?' · Round '+d.draftRound:'')+(d.draftPick?' · Pick '+d.draftPick:'')
-    :'Draft information not available';
+  const p=byName(name); if(!p)return;
+  const d=profileFallback[n(p.player_name)]||{};
+  const out=document.getElementById('profileOut'); if(!out)return;
   out.innerHTML=
     '<div class="profile">'+
-      '<h2>'+p.player_name+'</h2>'+
-      '<div class="pill">'+p.position+'</div><div class="pill">Rank #'+p.rank+'</div><div class="pill">Value '+(p.value??'—')+'</div>'+
-      '<div class="two" style="margin-top:12px">'+
-        '<div class="stat"><b>Current Team</b><br>'+(d.team||'Not available')+'</div>'+
-        '<div class="stat"><b>Age</b><br>'+(d.age??'Not available')+'</div>'+
-        '<div class="stat"><b>Height</b><br>'+(d.height||'Not available')+'</div>'+
-        '<div class="stat"><b>College / Alumni</b><br>'+(d.college||'Not available')+'</div>'+
-      '</div>'+
-      '<div class="stat"><b>2025 Regular-Season Stats</b><br>'+stats+'</div>'+
-      '<div class="stat"><b>Career / Draft</b><br>'+career+(d.experience?' · '+d.experience+' NFL seasons':'')+'</div>'+
-      '<div class="stat"><b>Fantasy Analysis</b><br>'+(p.rank<=20?'Elite-tier player in your rankings.':p.rank<=40?'Strong player; your trade value is the main signal.':'At this depth, numerical trade value matters more than exact ranking position.')+'</div>'+
-      '<div class="stat"><b>Trade-Model Value</b><br>'+tv(p.player_name).toFixed(1)+'</div>'+
-    '</div>';
+    '<h2>'+p.player_name+'</h2>'+
+    '<div class="pill">'+p.position+'</div>'+
+    '<div class="pill">Rank #'+p.rank+'</div>'+
+    '<div class="pill">Value '+(p.value??'—')+'</div>'+
+    '<div class="two" style="margin-top:12px">'+
+      '<div class="stat"><b>Current Team</b><br>'+(d.team||'Information coming soon')+'</div>'+
+      '<div class="stat"><b>Age</b><br>'+(d.age||'Information coming soon')+'</div>'+
+      '<div class="stat"><b>Height</b><br>'+(d.height||'Information coming soon')+'</div>'+
+      '<div class="stat"><b>College / Alumni</b><br>'+(d.college||'Information coming soon')+'</div>'+
+    '</div>'+
+    '<div class="stat"><b>2025 Regular-Season Stats</b><br>'+(d.stats||seasonStats[p.player_name]||'Information coming soon')+'</div>'+
+    '<div class="stat"><b>Fantasy Value</b><br>'+tv(p.player_name).toFixed(1)+'</div>'+
+    '<div class="stat"><b>Fantasy Analysis</b><br>'+
+      (p.rank<=20?'Elite-tier player in your rankings.':p.rank<=40?'Strong player; value is the main signal.':'Value matters more than exact ranking at this depth.')+
+    '</div></div>';
 }
 
 function showProfileNative(){
@@ -334,7 +261,6 @@ function renderProfileDirectoryStatic(){
   el.innerHTML=P.map((p,i)=>'<button type="button" class="chip" style="margin:3px" onclick="openProfile('+JSON.stringify(p.player_name)+')">'+p.player_name+'</button>').join('');
 }
 window.addEventListener('load',async()=>{
-  loadAllPlayerProfiles();
   const profileBtn=document.getElementById('viewProfileBtn'); if(profileBtn)profileBtn.addEventListener('click',window.showProfileNative);
   try{
     setupFilters();searchBox('A');searchBox('B');renderNeedPositions();renderWilling();
