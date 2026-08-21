@@ -5,8 +5,25 @@
 <div class="nav"><button id="bt" class="active" onclick="tab('trade')">⚖️ Trade Analyzer</button><button id="br" onclick="tab('rank')">📋 My PPR Rankings</button><button id="bf" onclick="tab('finder')">🤖 Trade Finder</button><button id="bc" onclick="tab('compare')">🆚 Compare</button><button id="bp" onclick="tab('profile')">👤 Player Profiles</button><button id="ba" onclick="tab('admin')">🔐 Admin</button></div>
 <section id="trade" class="tab active"><div class="card"><div class="teams"><div><h2>Team A Gives</h2><div id="A"></div><button onclick="addBox('A')">+ Add Player</button></div><div><h2>Team B Gives</h2><div id="B"></div><button onclick="addBox('B')">+ Add Player</button></div></div><button id="gradeBtn" class="primary" type="button" style="width:100%;margin-top:15px" onclick="gradeTrade()">⚡ Grade Trade</button><p class="muted">Your listed value is the primary signal. The model adds an elite-player premium, a modest established-player premium, and a small roster-spot discount for packages. Ranking position is only a tiny tiebreaker, and its influence fades sharply after the top 30–40 players.</p></div><div id="res" class="results"><div class="grades"><div class="grade"><div>Team A</div><div id="ga" class="letter"></div><div id="va"></div></div><div class="grade"><div>Team B</div><div id="gb" class="letter"></div><div id="vb"></div></div></div><div id="win" class="winner"></div><div id="feedbackText" class="feedback"></div></div></section>
 <section id="rank" class="tab"><div class="card"><h2>📋 My PPR Rankings</h2><input id="rs" placeholder="Search rankings..." oninput="renderRankings()"><div id="fs" class="filters"></div><div id="list"></div></div></section>
-<section id="compare" class="tab"><div class="card"><h2>🆚 Player Comparison</h2><div class="two"><div id="cmpA"></div><div id="cmpB"></div></div><button class="primary" style="margin-top:12px" onclick="comparePlayers()">Compare Players</button><div id="compareOut" style="margin-top:14px"></div></div></section>
-<section id="profile" class="tab"><div class="card"><h2>👤 Player Profile</h2><p class="muted">Search any player to see current team, age, your ranking/value, and 2025 regular-season production.</p><div id="profileSearch"></div><div id="profileStatus" class="msg"></div><div id="profileOut" style="margin-top:14px"></div><h3 style="margin-top:20px">Browse Players</h3><div id="profileDirectory"></div></div></section>
+<section id="compare" class="tab"><div class="card">
+<h2>🆚 Player Comparison</h2>
+<p class="muted">Start typing a player and recommendations will appear automatically.</p>
+<div class="two">
+<div><label><b>Player 1</b></label><input id="cmpInputA" list="playerChoices" placeholder="Search player..."></div>
+<div><label><b>Player 2</b></label><input id="cmpInputB" list="playerChoices" placeholder="Search player..."></div>
+</div>
+<button class="primary" type="button" style="margin-top:12px" onclick="comparePlayersNative()">Compare Players</button>
+<div id="compareOut" style="margin-top:14px"></div>
+</div></section>
+<section id="profile" class="tab"><div class="card">
+<h2>👤 Player Profiles</h2>
+<p class="muted">Start typing a player and recommendations will appear automatically.</p>
+<div class="search"><input id="profileInput" list="playerChoices" placeholder="🔎 Search player profile..."><button type="button" class="primary" style="margin-top:8px;width:100%" id="viewProfileBtn" onclick="window.showProfileNative()">View Player Profile</button></div>
+<div id="profileStatus" class="msg">Player profiles are ready.</div>
+<div id="profileOut" style="margin-top:14px"></div>
+<h3 style="margin-top:20px">Browse Players</h3><div id="profileDirectory"></div>
+</div></section>
+<datalist id="playerChoices"><option value="Josh Allen">QB · #1 · 85</option><option value="Lamar Jackson">QB · #2 · 84</option><option value="Jayden Daniels">QB · #3 · 84</option><option value="Jalen Hurts">QB · #4 · 83</option><option value="Drake Maye">QB · #5 · 82</option><option value="Joe Burrow">QB · #6 · 82</option><option value="Matthew Stafford">QB · #7 · 82</option><option value="Trevor Lawrence">QB · #8 · 81</option><option value="Jaxson Dart">QB · #9 · 80</option><option value="Caleb Williams">QB · #10 · 80</option><option value="Dak Prescott">QB · #11 · 79</option><option value="Bo Nix">QB · #12 · 79</option><option value="Justin Herbert">QB · #13 · 79</option><option value="Patrick Mahomes">QB · #14 · 79</option><option value="Brock Purdy">QB · #15 · 78</option><option value="Baker Mayfield">QB · #16 · 78</option><option value="Jahmyr Gibbs">RB · #1 · 99</option><option value="Bijan Robinson">RB · #2 · 98</option><option value="Jonathan Taylor">RB · #3 · 94</option><option value="Christian McCaffrey">RB · #4 · 93</option><option value="James Cook">RB · #5 · 92</option><option value="Omarion Hampton">RB · #6 · 90</option><option value="Ashton Jeanty">RB · #7 · 90</option><option value="De'Von Achane">RB · #8 · 88</option><option value="Chase Brown">RB · #9 · 88</option><option value="Saquon Barkley">RB · #10 · 87</option><option value="Derrick Henry">RB · #11 · 84</option><option value="Kenneth Walker">RB · #12 · 84</option><option value="Josh Jacobs">RB · #13 · 83</option><option value="Breece Hall">RB · #14 · 82</option><option value="Jeremiyah Love">RB · #15 · 81</option><option value="Javonte Williams">RB · #16 · 80</option><option value="Quinshon Judkins">RB · #17 · 79</option><option value="Travis Etienne">RB · #18 · 79</option><option value="Bucky Irving">RB · #19 · 75</option><option value="David Montgomery">RB · #20 · 74</option><option value="Kyren Williams">RB · #21 · 74</option><option value="Cam Skattebo">RB · #22 · 73</option><option value="DeAndre Swift">RB · #23 · 73</option><option value="Bashul Tuten">RB · #24 · 72</option><option value="Jadarian Price">RB · #25 · 70</option><option value="TreVeyon Henderson">RB · #26 · 69</option><option value="J.K. Dobbins">RB · #27 · 66</option><option value="Tony Pollard">RB · #28 · 65</option><option value="Kenny Gainwell">RB · #29 · 63</option><option value="Jonathon Brooks">RB · #30 · 63</option><option value="Kyle Monangai">RB · #31 · 61</option><option value="Chuba Hubbard">RB · #32 · 61</option><option value="RJ Harvey">RB · #33 · 60</option><option value="Rico Dowdle">RB · #34 · 60</option><option value="Aaron Jones">RB · #35 · 60</option><option value="Blake Corum">RB · #36 · 60</option><option value="Jaylen Warren">RB · #37 · 59</option><option value="Rhamondre Stevenson">RB · #38 · 59</option><option value="Bill Croskey-Merritt">RB · #39 · 59</option><option value="Tyrone Tracy Jr.">RB · #40 · 57</option><option value="Tyler Allgeier">RB · #41 · 57</option><option value="Woody Marks">RB · #42 · 57</option><option value="Rachaad White">RB · #43 · 56</option><option value="Chris Rodriguez">RB · #44 · 55</option><option value="Ja'Marr Chase">WR · #1 · 97</option><option value="Puka Nacua">WR · #2 · 97</option><option value="Jaxon Smith-Njigba">WR · #3 · 95</option><option value="Amon-Ra St. Brown">WR · #4 · 94</option><option value="Justin Jefferson">WR · #5 · 91</option><option value="CeeDee Lamb">WR · #6 · 90</option><option value="Drake London">WR · #7 · 88</option><option value="Rashee Rice">WR · #8 · 88</option><option value="A.J. Brown">WR · #9 · 87</option><option value="Emeka Egbuka">WR · #10 · 87</option><option value="Nico Collins">WR · #11 · 85</option><option value="DeVonta Smith">WR · #12 · 84</option><option value="Malik Nabers">WR · #13 · 84</option><option value="George Pickens">WR · #14 · 84</option><option value="Chris Olave">WR · #15 · 83</option><option value="Garrett Wilson">WR · #16 · 82</option><option value="Ladd McConkey">WR · #17 · 82</option><option value="Zay Flowers">WR · #18 · 82</option><option value="Tetairoa McMillan">WR · #19 · 81</option><option value="Tee Higgins">WR · #20 · 80</option><option value="Jaylen Waddle">WR · #21 · 79</option><option value="D.J. Moore">WR · #22 · 79</option><option value="Rome Odunze">WR · #23 · 77</option><option value="Marvin Harrison Jr.">WR · #24 · 76</option><option value="Luther Burden">WR · #25 · 76</option><option value="Davante Adams">WR · #26 · 75</option><option value="Brian Thomas Jr.">WR · #27 · 73</option><option value="Jameson Williams">WR · #28 · 71</option><option value="Mike Evans">WR · #29 · 71</option><option value="Carnell Tate">WR · #30 · 70</option><option value="Parker Washington">WR · #31 · 69</option><option value="Christian Watson">WR · #32 · 68</option><option value="D.K. Metcalf">WR · #33 · 68</option><option value="Alec Pierce">WR · #34 · 68</option><option value="Matthew Golden">WR · #35 · 67</option><option value="Michael Wilson">WR · #36 · 67</option><option value="Michael Pittman Jr.">WR · #37 · 65</option><option value="Courtland Sutton">WR · #38 · 65</option><option value="Jordan Addison">WR · #39 · 64</option><option value="Josh Downs">WR · #40 · 64</option><option value="Makai Lemon">WR · #41 · 64</option><option value="Quentin Johnston">WR · #42 · 63</option><option value="Wan’Dale Robinson">WR · #43 · 63</option><option value="Deebo Samuel Sr.">WR · #44 · 63</option><option value="KC Concepcion">WR · #45 · 63</option><option value="Khalil Shakir">WR · #46 · 62</option><option value="Xavier Worthy">WR · #47 · 62</option><option value="Stefon Diggs">WR · #48 · 62</option><option value="Brock Bowers">TE · #1 · 88</option><option value="Trey McBride">TE · #2 · 87</option><option value="Colston Loveland">TE · #3 · 85</option><option value="Tyler Warren">TE · #4 · 84</option><option value="Sam LaPorta">TE · #5 · 81</option><option value="Kyle Pitts">TE · #6 · 80</option><option value="George Kittle">TE · #7 · 80</option><option value="Harold Fannin Jr.">TE · #8 · 75</option><option value="Tucker Kraft">TE · #9 · 74</option><option value="Dallas Goedert">TE · #10 · 74</option><option value="Jake Ferguson">TE · #11 · 73</option><option value="Travis Kelce">TE · #12 · 70</option><option value="Dalton Kincaid">TE · #13 · 70</option><option value="Mark Andrews">TE · #14 · 69</option><option value="Isaiah Likely">TE · #15 · 69</option><option value="T.J. Hockenson">TE · #16 · 68</option><option value="Kenyon Sadiq">TE · #17 · 66</option><option value="Hunter Henry">TE · #18 · 65</option><option value="Texans">D/ST · #1 · —</option><option value="Seahawks">D/ST · #2 · —</option><option value="Broncos">D/ST · #3 · —</option><option value="Rams">D/ST · #4 · —</option><option value="Steelers">D/ST · #5 · —</option><option value="Ravens">D/ST · #6 · —</option><option value="Eagles">D/ST · #7 · —</option><option value="Lions">D/ST · #8 · —</option><option value="Packers">D/ST · #9 · —</option><option value="Browns">D/ST · #10 · —</option><option value="Brandon Aubrey">K · #1 · —</option><option value="Ka'imi Fairbairn">K · #2 · —</option><option value="Cameron Dicker">K · #3 · —</option><option value="Jason Myers">K · #4 · —</option><option value="Cam Little">K · #5 · —</option><option value="Jake Bates">K · #6 · —</option><option value="Harrison Butker">K · #7 · —</option><option value="Harrison Mevis">K · #8 · —</option></datalist>
 <section id="finder" class="tab"><div class="card"><h2>🤖 Trade Finder</h2><p class="muted">Choose the position(s) you need, then choose the players you are willing to trade away. The finder searches the rest of the rankings for fair 1-, 2-, and 3-player return packages and favors the positions you selected.</p><h3>Positions I Need</h3><div id="needPositions" class="checkgrid"></div><h3>Players I'm Willing To Trade</h3><div id="willing"></div><button class="primary" style="width:100%;margin-top:12px" onclick="findTrades()">🔎 Find Recommended Trades</button><div id="finderResults" class="finderResults"></div></div></section>
 <section id="admin" class="tab"><div id="login" class="card"><h2>🔐 Owner Login</h2><input id="em" placeholder="Email" type="email"><br><br><input id="pw" placeholder="Password" type="password"><button class="primary" style="width:100%;margin-top:8px" onclick="login()">Log In</button><div id="lm" class="msg"></div></div><div id="ap" class="card admin"><h2>✏️ Edit Rankings</h2><div id="am" class="msg"></div><input id="as" placeholder="Search players..." oninput="adminRender()"><button class="primary" style="margin:10px 0" onclick="save()">💾 Save Changes</button><div id="ar"></div><button onclick="logout()">Log Out</button></div></section>
 </div><div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div id="modalBox" class="modalBox"></div></div>
@@ -93,8 +110,96 @@ window.gradeTrade=gradeTrade;
 function renderRankings(){let q=n(document.getElementById('rs').value),f=P.filter(p=>(filter==='ALL'||p.position===filter)&&(!q||n(p.player_name).includes(q))),g={};f.forEach(p=>(g[p.position]??=[]).push(p));document.getElementById('list').innerHTML=['QB','RB','WR','TE','D/ST','K'].filter(x=>g[x]).map(x=>'<div class="box" style="margin-bottom:12px"><div class="head">'+x+'</div>'+g[x].map((p,i)=>'<div class="row clickable" data-profile="'+i+'" data-pos="'+x+'"><span>#'+p.rank+'</span><span>'+p.player_name+'</span><b>'+(p.value==null?'—':p.value)+'</b></div>').join('')+'</div>').join('');document.querySelectorAll('#list [data-profile]').forEach(el=>el.onclick=()=>{let pos=el.dataset.pos,idx=+el.dataset.profile;let arr=P.filter(p=>p.position===pos&&(!q||n(p.player_name).includes(q)));if(arr[idx])openProfile(arr[idx].player_name)})}
 function setupFilters(){const fs=document.getElementById('fs');['ALL','QB','RB','WR','TE','D/ST','K'].forEach(x=>{let b=document.createElement('button');b.textContent=x;if(x==='ALL')b.className='active';b.onclick=()=>{filter=x;document.querySelectorAll('#fs button').forEach(z=>z.classList.remove('active'));b.classList.add('active');renderRankings()};fs.appendChild(b)})}
 function setupCompare(){searchBox('cmpA');searchBox('cmpB');}
-function setupProfile(){searchBox('profileSearch','profileSearch');let inp=document.querySelector('#profileSearch input');inp.placeholder='🔎 Search a player profile...';let sug=inp.nextElementSibling;inp.oninput=()=>{let q=n(inp.value);if(!q){sug.style.display='none';return}let m=P.filter(p=>n(p.player_name).includes(q)).slice(0,10);sug.innerHTML=m.map((p,j)=>'<div data-j="'+j+'"><b>'+p.player_name+'</b> <small>'+p.position+' · #'+p.rank+(p.value==null?'':' · '+p.value)+'</small></div>').join('')||'<div>No player found</div>';sug.style.display='block';sug.querySelectorAll('[data-j]').forEach(x=>x.onmousedown=e=>{e.preventDefault();openProfile(m[+x.dataset.j].player_name);inp.value=m[+x.dataset.j].player_name;sug.style.display='none'})};}
-function comparePlayers(){const a=document.querySelector('#cmpA .search input')?.value,b=document.querySelector('#cmpB .search input')?.value;const pa=byName(a),pb=byName(b);if(!pa||!pb)return alert('Search for one player in each box.');compareA=pa;compareB=pb;document.getElementById('compareOut').innerHTML='<div class="two"><div class="profile"><h3>'+pa.player_name+'</h3><div class="stat">'+pa.position+' · Rank #'+pa.rank+'</div><div class="stat">Value: <b>'+(pa.value??'—')+'</b></div><div class="stat">'+(seasonStats[pa.player_name]||'No production note added yet.')+'</div></div><div class="profile"><h3>'+pb.player_name+'</h3><div class="stat">'+pb.position+' · Rank #'+pb.rank+'</div><div class="stat">Value: <b>'+(pb.value??'—')+'</b></div><div class="stat">'+(seasonStats[pb.player_name]||'No production note added yet.')+'</div></div></div><div class="feedback">'+compareExplanation(pa,pb)+'</div>'}
+function renderProfileDirectoryImmediate(){
+  const el=document.getElementById('profileDirectory');
+  if(!el)return;
+  el.innerHTML=P.map((p,i)=>'<button class="chip" style="margin:3px" data-pidx="'+i+'">'+p.player_name+'</button>').join('');
+  el.querySelectorAll('[data-pidx]').forEach(b=>b.onclick=()=>openProfile(P[+b.dataset.pidx].player_name));
+}
+function setupProfile(){
+  searchBox('profileSearch','profileSearch');
+  const inp=document.querySelector('#profileSearch input');
+  if(!inp)return;
+  inp.placeholder='🔎 Search a player profile...';
+  const sug=inp.nextElementSibling;
+  inp.oninput=()=>{
+    const q=n(inp.value);
+    if(!q){sug.style.display='none';return;}
+    const m=P.filter(p=>n(p.player_name).includes(q)).slice(0,10);
+    sug.innerHTML=m.length?m.map((p,j)=>'<div data-j="'+j+'"><b>'+p.player_name+'</b> <small>'+p.position+' · #'+p.rank+(p.value==null?'':' · '+p.value)+'</small></div>').join(''):'<div>No player found</div>';
+    sug.style.display='block';
+    sug.querySelectorAll('[data-j]').forEach(x=>x.onmousedown=e=>{
+      e.preventDefault();
+      const p=m[+x.dataset.j];
+      if(p){openProfile(p.player_name);inp.value=p.player_name;}
+      sug.style.display='none';
+    });
+  };
+  renderProfileDirectoryImmediate();
+}
+
+
+let cmpStaticA=null,cmpStaticB=null;
+
+function setupStaticPlayerSearch(inputId,sugId,side){
+  const inp=document.getElementById(inputId), sug=document.getElementById(sugId);
+  if(!inp||!sug)return;
+  inp.addEventListener('input',()=>{
+    const q=n(inp.value);
+    if(!q){sug.style.display='none';return;}
+    const m=P.filter(p=>n(p.player_name).includes(q)).slice(0,10);
+    sug.innerHTML=m.length?m.map((p,i)=>'<div data-i="'+i+'"><b>'+p.player_name+'</b> <small>'+p.position+' · #'+p.rank+' · '+(p.value??'—')+'</small></div>').join(''):'<div>No player found</div>';
+    sug.style.display='block';
+    sug.querySelectorAll('[data-i]').forEach(el=>el.onmousedown=e=>{
+      e.preventDefault();
+      const p=m[+el.dataset.i];
+      if(side==='A')cmpStaticA=p;else cmpStaticB=p;
+      inp.value=p.player_name;
+      sug.style.display='none';
+    });
+  });
+}
+
+function comparePlayersStatic(){
+  const a=cmpStaticA||byName(document.getElementById('cmpInputA').value);
+  const b=cmpStaticB||byName(document.getElementById('cmpInputB').value);
+  if(!a||!b){alert('Select one player in each box.');return;}
+  cmpStaticA=a;cmpStaticB=b;
+  const va=tv(a.player_name),vb=tv(b.player_name),diff=Math.abs(va-vb);
+  const better=va>vb?a:b, other=va>vb?b:a;
+  document.getElementById('compareOut').innerHTML=
+    '<div class="two"><div class="profile"><h3>'+a.player_name+'</h3><div class="stat">'+a.position+' · Rank #'+a.rank+'</div><div class="stat">Value: <b>'+a.value+'</b></div><div class="stat">'+(seasonStats[a.player_name]||'Production information available in profile.')+'</div></div>'+
+    '<div class="profile"><h3>'+b.player_name+'</h3><div class="stat">'+b.position+' · Rank #'+b.rank+'</div><div class="stat">Value: <b>'+b.value+'</b></div><div class="stat">'+(seasonStats[b.player_name]||'Production information available in profile.')+'</div></div></div>'+
+    '<div class="feedback" style="margin-top:12px"><b>'+better.player_name+'</b> has the higher trade-model value by '+diff.toFixed(1)+' points. '+compareExplanation(a,b)+'</div>';
+}
+
+function renderProfileDirectoryStatic(){
+  const el=document.getElementById('profileDirectory');if(!el)return;
+  el.innerHTML=P.length?P.map((p,i)=>'<button type="button" class="chip" style="margin:3px" data-profile-i="'+i+'">'+p.player_name+'</button>').join(''):'<div class="muted">Loading your rankings…</div>';
+  el.querySelectorAll('[data-profile-i]').forEach(b=>b.onclick=()=>openProfile(P[+b.dataset.profileI].player_name));
+}
+
+function setupStaticProfiles(){
+  setupStaticPlayerSearch('profileInput','profileSug','P');
+  renderProfileDirectoryStatic();
+  const inp=document.getElementById('profileInput'),sug=document.getElementById('profileSug');
+  if(inp)sug&&sug.addEventListener('mousedown',()=>{});
+}
+
+function comparePlayers(){
+  const aSel=[...document.querySelectorAll('#cmpA .sel')].map(x=>x.dataset.name)[0];
+  const bSel=[...document.querySelectorAll('#cmpB .sel')].map(x=>x.dataset.name)[0];
+  const aInput=document.querySelector('#cmpA .search input')?.value||'';
+  const bInput=document.querySelector('#cmpB .search input')?.value||'';
+  const pa=byName(aSel||aInput), pb=byName(bSel||bInput);
+  if(!pa||!pb){alert('Select one player in each comparison box.');return;}
+  compareA=pa;compareB=pb;
+  document.getElementById('compareOut').innerHTML='<div class="two">'+
+  '<div class="profile"><h3>'+pa.player_name+'</h3><div class="stat">'+pa.position+' · Rank #'+pa.rank+'</div><div class="stat">Value: <b>'+(pa.value??'—')+'</b></div><div class="stat">'+(seasonStats[pa.player_name]||'No production note added yet.')+'</div></div>'+
+  '<div class="profile"><h3>'+pb.player_name+'</h3><div class="stat">'+pb.position+' · Rank #'+pb.rank+'</div><div class="stat">Value: <b>'+(pb.value??'—')+'</b></div><div class="stat">'+(seasonStats[pb.player_name]||'No production note added yet.')+'</div></div>'+
+  '</div><div class="feedback">'+compareExplanation(pa,pb)+'</div>';
+}
+
 function compareExplanation(a,b){if(a.value==null||b.value==null)return'One or both players do not have a fantasy value in your rankings.';const high=a.value>b.value?a:b,low=a.value>b.value?b:a;let text=high.player_name+' has the higher listed value ('+high.value+' vs. '+low.value+'). ';if(Math.abs(a.rank-b.rank)>10)text+='The model treats the ranking gap as a smaller signal once players are deeper in the rankings, so value is doing most of the work here.';return text}
 const profileDb={};
 function ageFromBirth(b){if(!b)return null;const d=new Date(b+'T00:00:00');if(Number.isNaN(d.getTime()))return null;const now=new Date();let age=now.getFullYear()-d.getFullYear();const m=now.getMonth()-d.getMonth();if(m<0||(m===0&&now.getDate()<d.getDate()))age--;return age}
@@ -109,81 +214,132 @@ function renderProfileDirectory(){
   host.innerHTML=Object.entries(groups).map(([pos,arr])=>'<div class="box" style="margin-bottom:12px"><div class="head">'+pos+'</div>'+arr.map(p=>'<div class="row clickable" data-name="'+encodeURIComponent(p.player_name)+'"><span>#'+p.rank+'</span><span>'+p.player_name+'</span><b>'+p.value+'</b></div>').join('')+'</div>').join('');
   host.querySelectorAll('[data-name]').forEach(el=>el.onclick=()=>openProfile(decodeURIComponent(el.dataset.name)));
 }
-function openProfile(name){const p=byName(name);if(!p)return;const d=profileDb[n(p.player_name)]||{};const age=d.age??'Not loaded';const team=d.currentTeam||d.team2025||'Not loaded';const st=d.stats||null;const stat=statText(p,st);document.getElementById('profileOut').innerHTML='<div class="profile"><h2>'+p.player_name+'</h2><div class="pill">'+p.position+'</div><div class="pill">Rank #'+p.rank+'</div><div class="pill">Value '+(p.value??'—')+'</div><div class="two" style="margin-top:12px"><div class="stat"><b>Current team</b><br>'+team+'</div><div class="stat"><b>Age</b><br>'+age+'</div></div><div class="stat"><b>2025 regular-season stats</b><br>'+stat+'</div><div class="stat"><b>Trade-model value:</b> '+tv(p.player_name).toFixed(1)+'</div><div class="stat"><b>Model note:</b> '+(p.rank<=20?'Ranking position has a little more influence at this tier.':p.rank<=40?'Value is the main signal; ranking position is a small tiebreaker.':'Value is overwhelmingly more important than ranking position at this depth.')+'</div><div class="muted small" style="margin-top:10px">Profile data: NFL/nflverse player and roster data; previous-season stats are 2025 regular season.</div></div>'}
-async function loadProfiles(){const status=document.getElementById('profileStatus');status.textContent='Loading player profile data…';try{const urls={players:'https://github.com/nflverse/nflverse-data/releases/download/players/players.csv',roster:'https://github.com/nflverse/nflverse-data/releases/download/rosters/roster_2026.csv',stats:'https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_reg_2025.csv'};const [a,b,c]=await Promise.all([fetch(urls.players),fetch(urls.roster),fetch(urls.stats)]);if(!a.ok||!b.ok||!c.ok)throw new Error('Profile data request failed');const [players,roster,stats]=await Promise.all([a.text(),b.text(),c.text()]);const ps=csvRows(players),rs=csvRows(roster),ss=csvRows(stats);const rosterMap=new Map();rs.forEach(x=>{const name=pick(x,['full_name','player_display_name','player_name']);const team=pick(x,['team','team_abbr','club_code']);if(name&&team)rosterMap.set(n(name),team)});const statsMap=new Map();ss.forEach(x=>{const name=pick(x,['player_display_name','player_name','full_name']);if(name)statsMap.set(n(name),x)});ps.forEach(x=>{const name=pick(x,['display_name','full_name','player_name']);if(!name)return;profileDb[n(name)]={age:ageFromBirth(pick(x,['birth_date','birthdate','dob'])),currentTeam:rosterMap.get(n(name))||null,team2025:pick(statsMap.get(n(name)),['team']),stats:statsMap.get(n(name))||null}});status.textContent='Profile data loaded. Click a player from Rankings or search above.';}catch(e){status.textContent='Live profile data could not be loaded right now. Rankings and trade tools still work; known production notes are used as a fallback.'}}
-function renderNeedPositions(){document.getElementById('needPositions').innerHTML=['QB','RB','WR','TE'].map(x=>'<label><input type="checkbox" value="'+x+'"> '+x+'</label>').join('')}
-function renderWilling(){const host=document.getElementById('willing');host.innerHTML='';searchBox('willing','willing');let input=host.querySelector('input');let sug=input.nextElementSibling;input.oninput=()=>{let q=n(input.value);if(!q){sug.style.display='none';return}let chosen=new Set([...host.querySelectorAll('.sel')].map(x=>n(x.dataset.name)));let m=P.filter(p=>p.value!=null&&!chosen.has(n(p.player_name))&&n(p.player_name).includes(q)).slice(0,10);sug.innerHTML=m.map((p,j)=>'<div data-j="'+j+'"><b>'+p.player_name+'</b> <small>'+p.position+' · #'+p.rank+' · '+p.value+'</small></div>').join('')||'<div>No player found</div>';sug.style.display='block';sug.querySelectorAll('[data-j]').forEach(x=>x.onmousedown=e=>{e.preventDefault();let p=m[+x.dataset.j];addFinderWilling(p);input.value='';sug.style.display='none'})}}
-function addFinderWilling(p){const host=document.getElementById('willing');if([...host.querySelectorAll('.sel')].some(x=>n(x.dataset.name)===n(p.player_name)))return;let r=document.createElement('div');r.className='sel';r.dataset.name=p.player_name;r.innerHTML='<span>'+p.player_name+' <small>'+p.position+' · '+p.value+'</small></span><button>×</button>';r.querySelector('button').onclick=()=>r.remove();let s=host.querySelector('.search');host.insertBefore(r,s)}
-function refreshFinderWilling(){}
-function findTrades(){
- const need=[...document.querySelectorAll('#needPositions input:checked')].map(x=>x.value);
- const give=[...document.querySelectorAll('#willing .sel')].map(x=>x.dataset.name);
- const out=document.getElementById('finderResults');
- if(!need.length){alert('Choose at least one position you need.');return;}
- if(!give.length){alert('Choose at least one player you are willing to trade.');return;}
- const giveValue=totalNames(give), primary=need[0], excluded=new Set(give.map(n));
- const valueMap=new Map(P.filter(p=>p.value!=null).map(p=>[n(p.player_name),tv(p.player_name)]));
- const byPos={};
- P.filter(p=>p.value!=null&&!excluded.has(n(p.player_name))).forEach(p=>{
-   (byPos[p.position]??=[]).push(p);
- });
- Object.keys(byPos).forEach(pos=>byPos[pos].sort((a,b)=>valueMap.get(n(b.player_name))-valueMap.get(n(a.player_name))));
- // Keep the search fast while still considering the strongest realistic options.
- Object.keys(byPos).forEach(pos=>byPos[pos]=byPos[pos].slice(0,18));
- const candidates=[];
- const addCandidate=(players)=>{
-   const names=players.map(p=>p.player_name);
-   const vals=players.map(p=>valueMap.get(n(p.player_name))||0);
-   let v=vals.reduce((a,b)=>a+b,0);
-   if(players.length>1)v*=Math.pow(0.91,players.length-1);
-   const gap=Math.abs(v-giveValue)/Math.max(v,giveValue);
-   const counts={}; players.forEach(p=>counts[p.position]=(counts[p.position]||0)+1);
-   const primaryCount=counts[primary]||0;
-   if(!primaryCount)return;
-   const positions=Object.keys(counts);
-   const otherPositions=positions.filter(x=>x!==primary).length;
-   if(players.length>1 && otherPositions<1)return;
-   if(players.length===3 && positions.length<3)return;
-   const extraPrimary=Math.max(0,primaryCount-1);
-   const samePosExtras=Object.values(counts).reduce((sum,c)=>sum+Math.max(0,c-1),0);
-   const needCovered=need.filter(pos=>counts[pos]>0).length;
-   const score=gap+(players.length-1)*0.012+extraPrimary*0.24+samePosExtras*0.08-otherPositions*0.045-(needCovered-1)*0.08;
-   candidates.push({names,value:v,gap,score,primaryCount,needCovered});
- };
- const prim=byPos[primary]||[];
- // 1-player: primary need only.
- prim.forEach(p=>addCandidate([p]));
- // 2-player: primary + one different position, prioritizing other needs.
- const otherOrder=[...need.filter(x=>x!==primary),...Object.keys(byPos).filter(x=>x!==primary&&!need.includes(x))];
- otherOrder.forEach(pos=>(byPos[pos]||[]).slice(0,12).forEach(q=>prim.slice(0,18).forEach(p=>addCandidate([p,q]))));
- // 3-player: primary + two different positions. This creates realistic mixed packages.
- for(let i=0;i<otherOrder.length;i++){
-   for(let j=i+1;j<otherOrder.length;j++){
-     const a=byPos[otherOrder[i]]||[],b=byPos[otherOrder[j]]||[];
-     prim.slice(0,18).forEach(p=>a.slice(0,10).forEach(q=>b.slice(0,10).forEach(r=>addCandidate([p,q,r]))));
-   }
- }
- candidates.sort((a,b)=>a.score-b.score);
- const unique=[],seen=new Set();
- for(const c of candidates){const key=c.names.slice().sort().join('|');if(!seen.has(key)){seen.add(key);unique.push(c)}if(unique.length>=8)break;}
- out.innerHTML=unique.length?unique.map((c,i)=>'<div class="finderCard '+(i===0?'best':'')+'"><div class="tradeLine"><b>'+(i===0?'⭐ Best Match':'Recommended Match')+'</b><span>'+Math.round((1-c.gap)*100)+'% value match</span></div><p><b>'+c.names.join(' + ')+'</b></p><p class="muted small">Model value: '+c.value.toFixed(1)+' · Your give-away: '+giveValue.toFixed(1)+' · Primary need: '+primary+'</p><button class="primary" onclick="sendFinderToAnalyzer('+JSON.stringify(give)+','+JSON.stringify(c.names)+')">Analyze This Trade</button></div>').join(''):'<div class="feedback">No realistic close package found. Try another player or position need.</div>';
+const profileFallback={
+  "josh allen":{team:"Buffalo Bills",college:"University of Wyoming",age:"30",height:"6'5\"",stats:"2025 regular season: 3,668 passing yards, 25 passing TDs, 10 INTs"}
+};
+
+const profileFallback={
+  "josh allen":{
+    team:"Buffalo Bills",college:"University of Wyoming",age:"30",height:"6'5\"",
+    stats:"2025 regular season: 3,668 passing yards, 25 passing TDs, 10 INTs"
+  }
+};
+const profileData={};
+
+function formatProfileHeight(v){
+  if(v==null||v==='')return 'Not available';
+  const x=String(v).trim();
+  if(/^\d+$/.test(x)){const inches=Number(x);return Math.floor(inches/12)+"'"+(inches%12)+'"';}
+  return x;
 }
-function sendFinderToAnalyzer(give,get){document.getElementById('A').innerHTML='';document.getElementById('B').innerHTML='';searchBox('A');searchBox('B');give.forEach(x=>add('A',byName(x)));get.forEach(x=>add('B',byName(x)));tab('trade');gradeTrade()}
-async function load(){
+const profileTeams={
+  ARI:"Arizona Cardinals",ATL:"Atlanta Falcons",BAL:"Baltimore Ravens",BUF:"Buffalo Bills",
+  CAR:"Carolina Panthers",CHI:"Chicago Bears",CIN:"Cincinnati Bengals",CLE:"Cleveland Browns",
+  DAL:"Dallas Cowboys",DEN:"Denver Broncos",DET:"Detroit Lions",GB:"Green Bay Packers",
+  HOU:"Houston Texans",IND:"Indianapolis Colts",JAX:"Jacksonville Jaguars",KC:"Kansas City Chiefs",
+  LV:"Las Vegas Raiders",LAC:"Los Angeles Chargers",LAR:"Los Angeles Rams",MIA:"Miami Dolphins",
+  MIN:"Minnesota Vikings",NE:"New England Patriots",NO:"New Orleans Saints",NYG:"New York Giants",
+  NYJ:"New York Jets",PHI:"Philadelphia Eagles",PIT:"Pittsburgh Steelers",SEA:"Seattle Seahawks",
+  SF:"San Francisco 49ers",TB:"Tampa Bay Buccaneers",TEN:"Tennessee Titans",WAS:"Washington Commanders"
+};
+function fullProfileTeam(v){return profileTeams[String(v||'').toUpperCase()]||v||'Not available';}
+function profileStats(p,s){
+  if(!s)return seasonStats[p.player_name]||'No 2025 production data available.';
+  const f=x=>x==null||x===''||x==='NA'?'—':Number(x).toLocaleString();
+  if(p.position==='QB')return f(pick(s,['passing_yards']))+' passing yards · '+f(pick(s,['passing_tds']))+' pass TDs · '+f(pick(s,['interceptions']))+' INTs · '+f(pick(s,['rushing_yards']))+' rush yards · '+f(pick(s,['rushing_tds']))+' rush TDs';
+  if(p.position==='K')return f(pick(s,['fg_made']))+' FGs · '+f(pick(s,['pat_made']))+' extra points';
+  return f(pick(s,['receptions']))+' receptions · '+f(pick(s,['receiving_yards']))+' receiving yards · '+f(pick(s,['receiving_tds']))+' receiving TDs · '+f(pick(s,['rushing_yards']))+' rush yards · '+f(pick(s,['rushing_tds']))+' rush TDs';
+}
+async function loadAllPlayerProfiles(){
+  const status=document.getElementById('profileStatus');
+  if(status)status.textContent='Loading profile information for all 144 players…';
   try{
-    if(!SB) throw new Error('Preview mode: using built-in rankings');
-    let r=await SB.from('rankings').select('*').order('position').order('rank');
-    if(r.error) throw r.error;
-    if(r.data&&r.data.length) P=r.data;
-  }catch(e){ P=[...fallback]; }
-  renderRankings();
-  renderProfileDirectory();
+    const urls=[
+      'https://github.com/nflverse/nflverse-data/releases/download/players/players.csv',
+      'https://github.com/nflverse/nflverse-data/releases/download/rosters/roster_2026.csv',
+      'https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_reg_2025.csv'
+    ];
+    const [a,b,c]=await Promise.all(urls.map(u=>fetch(u)));
+    if(!a.ok||!b.ok||!c.ok)throw new Error('Profile source unavailable');
+    const [players,rosters,stats]=await Promise.all([a.text(),b.text(),c.text()]);
+    const ps=csvRows(players),rs=csvRows(rosters),ss=csvRows(stats);
+    const rm=new Map(),sm=new Map();
+    rs.forEach(r=>{const name=pick(r,['full_name','player_display_name','player_name']);if(name)rm.set(n(name),r);});
+    ss.forEach(r=>{const name=pick(r,['player_display_name','player_name','full_name']);if(name)sm.set(n(name),r);});
+    ps.forEach(p=>{
+      const name=pick(p,['display_name','full_name','player_display_name','player_name']);
+      if(!name)return;
+      const r=rm.get(n(name))||{},s=sm.get(n(name))||null;
+      profileData[n(name)]={
+        team:fullProfileTeam(pick(r,['team','team_abbr','club_code'])||pick(s,['team'])),
+        age:ageFromBirth(pick(p,['birth_date','birthdate','dob'])),
+        height:formatProfileHeight(pick(p,['height','height_inches','height_in'])),
+        college:pick(p,['college_name','college','collegeName'])||pick(r,['college_name','college'])||'Not available',
+        draftYear:pick(p,['draft_year','draftYear']),
+        draftRound:pick(p,['draft_round','draftRound']),
+        draftPick:pick(p,['draft_pick','draftPick']),
+        experience:pick(p,['years_exp','years_experience','experience']),
+        stats:s
+      };
+    });
+    if(status)status.textContent='Profile information loaded for your ranked players.';
+  }catch(err){
+    console.warn('Profile data could not be loaded:',err);
+    if(status)status.textContent='Player profiles are ready. Some live details may be unavailable right now.';
+  }
 }
-async function login(){try{if(!SB){document.getElementById('lm').textContent='Preview mode: add your Supabase publishable key before using Owner Login.';return;}let r=await SB.auth.signInWithPassword({email:document.getElementById('em').value,password:document.getElementById('pw').value});document.getElementById('lm').textContent=r.error?r.error.message:'Logged in!';if(!r.error)check()}catch(e){document.getElementById('lm').textContent='Login connection error. Admin is not being changed in this version.'}}
-async function logout(){try{if(SB) await SB.auth.signOut()}catch(e){}check()}
-async function check(){try{let r=SB?await SB.auth.getUser():{data:{user:null}};authed=!!r.data.user}catch(e){authed=false}document.getElementById('login').style.display=authed?'none':'block';document.getElementById('ap').classList.toggle('on',authed);if(authed)adminRender()}
-function adminRender(){if(!authed)return;let q=n(document.getElementById('as').value),f=P.filter(p=>!q||n(p.player_name).includes(q));document.getElementById('ar').innerHTML='<div class="tableWrap"><table><tr><th>Pos</th><th>Rank</th><th>Player</th><th>Value</th></tr>'+f.map((p,i)=>'<tr data-id="'+(p.id||i)+'"><td><input data-f="position" value="'+p.position+'"></td><td><input data-f="rank" type="number" value="'+p.rank+'"></td><td><input data-f="player_name" value="'+p.player_name+'"></td><td><input data-f="value" type="number" value="'+(p.value??'')+'"></td></tr>').join('')+'</table></div>'}
-async function save(){document.getElementById('am').textContent='Admin saving is intentionally unchanged for now. Use this area only after we fix the authentication connection.'}
-function closeModal(){document.getElementById('modal').classList.remove('on')}
-window.addEventListener('load',async()=>{setupFilters();searchBox('A');searchBox('B');setupCompare();setupProfile();renderNeedPositions();renderWilling();await load();loadProfiles()});
-</script></body></html>
+function openProfile(name){
+  const p=byName(name);if(!p)return;
+  const d=profileData[n(p.player_name)]||profileFallback[n(p.player_name)]||{};
+  const out=document.getElementById('profileOut');if(!out)return;
+  const stats=profileStats(p,d.stats);
+  const career=d.draftYear
+    ?'Drafted '+d.draftYear+(d.draftRound?' · Round '+d.draftRound:'')+(d.draftPick?' · Pick '+d.draftPick:'')
+    :'Draft information not available';
+  out.innerHTML=
+    '<div class="profile">'+
+      '<h2>'+p.player_name+'</h2>'+
+      '<div class="pill">'+p.position+'</div><div class="pill">Rank #'+p.rank+'</div><div class="pill">Value '+(p.value??'—')+'</div>'+
+      '<div class="two" style="margin-top:12px">'+
+        '<div class="stat"><b>Current Team</b><br>'+(d.team||'Not available')+'</div>'+
+        '<div class="stat"><b>Age</b><br>'+(d.age??'Not available')+'</div>'+
+        '<div class="stat"><b>Height</b><br>'+(d.height||'Not available')+'</div>'+
+        '<div class="stat"><b>College / Alumni</b><br>'+(d.college||'Not available')+'</div>'+
+      '</div>'+
+      '<div class="stat"><b>2025 Regular-Season Stats</b><br>'+stats+'</div>'+
+      '<div class="stat"><b>Career / Draft</b><br>'+career+(d.experience?' · '+d.experience+' NFL seasons':'')+'</div>'+
+      '<div class="stat"><b>Fantasy Analysis</b><br>'+(p.rank<=20?'Elite-tier player in your rankings.':p.rank<=40?'Strong player; your trade value is the main signal.':'At this depth, numerical trade value matters more than exact ranking position.')+'</div>'+
+      '<div class="stat"><b>Trade-Model Value</b><br>'+tv(p.player_name).toFixed(1)+'</div>'+
+    '</div>';
+}
+
+function showProfileNative(){
+  const input=document.getElementById('profileInput');
+  const raw=(input?.value||'').trim();
+  if(!raw){alert('Search for a player first.');return;}
+  let p=byName(raw)||P.find(x=>n(x.player_name)===n(raw));
+  if(!p){
+    const matches=P.filter(x=>n(x.player_name).includes(n(raw)));
+    if(matches.length===1)p=matches[0];
+  }
+  if(!p){alert('Choose a player from the recommendations.');return;}
+  input.value=p.player_name;
+  openProfile(p.player_name);
+}
+window.showProfileNative=showProfileNative;
+window.openProfile=openProfile;
+
+function renderProfileDirectoryStatic(){
+  const el=document.getElementById('profileDirectory');if(!el)return;
+  el.innerHTML=P.map((p,i)=>'<button type="button" class="chip" style="margin:3px" onclick="openProfile('+JSON.stringify(p.player_name)+')">'+p.player_name+'</button>').join('');
+}
+window.addEventListener('load',async()=>{
+  loadAllPlayerProfiles();
+  const profileBtn=document.getElementById('viewProfileBtn'); if(profileBtn)profileBtn.addEventListener('click',window.showProfileNative);
+  try{
+    setupFilters();searchBox('A');searchBox('B');renderNeedPositions();renderWilling();
+    renderProfileDirectoryStatic();
+    await load();
+    renderNeedPositions();renderWilling();renderProfileDirectoryStatic();
+  }catch(e){console.error(e);renderProfileDirectoryStatic();}
+});</script><footer style="text-align:center;padding:24px 0 10px;color:#7f8aa8;font-size:13px">Created by Haden</footer></body></html>
