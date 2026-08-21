@@ -3,7 +3,7 @@
 </style></head><body><div class="wrap">
 <h1>🏈 Fantasy Trade Grader</h1>
 <div class="nav"><button id="bt" class="active" onclick="tab('trade')">⚖️ Trade Analyzer</button><button id="br" onclick="tab('rank')">📋 My PPR Rankings</button><button id="bf" onclick="tab('finder')">🤖 Trade Finder</button><button id="bc" onclick="tab('compare')">🆚 Compare</button><button id="bp" onclick="tab('profile')">👤 Player Profiles</button><button id="ba" onclick="tab('admin')">🔐 Admin</button></div>
-<section id="trade" class="tab active"><div class="card"><div class="teams"><div><h2>Team A Gives</h2><div id="A"></div><button onclick="addBox('A')">+ Add Player</button></div><div><h2>Team B Gives</h2><div id="B"></div><button onclick="addBox('B')">+ Add Player</button></div></div><button class="primary" style="width:100%;margin-top:15px" onclick="gradeTrade()">⚡ Grade Trade</button><p class="muted">Your listed value is the primary signal. The model adds an elite-player premium, a modest established-player premium, and a small roster-spot discount for packages. Ranking position is only a tiny tiebreaker, and its influence fades sharply after the top 30–40 players.</p></div><div id="res" class="results"><div class="grades"><div class="grade"><div>Team A</div><div id="ga" class="letter"></div><div id="va"></div></div><div class="grade"><div>Team B</div><div id="gb" class="letter"></div><div id="vb"></div></div></div><div id="win" class="winner"></div><div id="feedbackText" class="feedback"></div></div></section>
+<section id="trade" class="tab active"><div class="card"><div class="teams"><div><h2>Team A Gives</h2><div id="A"></div><button onclick="addBox('A')">+ Add Player</button></div><div><h2>Team B Gives</h2><div id="B"></div><button onclick="addBox('B')">+ Add Player</button></div></div><button id="gradeBtn" class="primary" type="button" style="width:100%;margin-top:15px" onclick="gradeTrade()">⚡ Grade Trade</button><p class="muted">Your listed value is the primary signal. The model adds an elite-player premium, a modest established-player premium, and a small roster-spot discount for packages. Ranking position is only a tiny tiebreaker, and its influence fades sharply after the top 30–40 players.</p></div><div id="res" class="results"><div class="grades"><div class="grade"><div>Team A</div><div id="ga" class="letter"></div><div id="va"></div></div><div class="grade"><div>Team B</div><div id="gb" class="letter"></div><div id="vb"></div></div></div><div id="win" class="winner"></div><div id="feedbackText" class="feedback"></div></div></section>
 <section id="rank" class="tab"><div class="card"><h2>📋 My PPR Rankings</h2><input id="rs" placeholder="Search rankings..." oninput="renderRankings()"><div id="fs" class="filters"></div><div id="list"></div></div></section>
 <section id="compare" class="tab"><div class="card"><h2>🆚 Player Comparison</h2><div class="two"><div id="cmpA"></div><div id="cmpB"></div></div><button class="primary" style="margin-top:12px" onclick="comparePlayers()">Compare Players</button><div id="compareOut" style="margin-top:14px"></div></div></section>
 <section id="profile" class="tab"><div class="card"><h2>👤 Player Profile</h2><p class="muted">Search any player to see current team, age, your ranking/value, and 2025 regular-season production.</p><div id="profileSearch"></div><div id="profileStatus" class="msg"></div><div id="profileOut" style="margin-top:14px"></div><h3 style="margin-top:20px">Browse Players</h3><div id="profileDirectory"></div></div></section>
@@ -36,7 +36,60 @@ function total(t){return totalNames(selected(t))}
 function rawTotal(t){return selected(t).reduce((a,x)=>a+(byName(x)?.value||0),0)}
 function gr(x){if(x>=97)return'A+';if(x>=93)return'A';if(x>=89)return'A-';if(x>=85)return'B+';if(x>=81)return'B';if(x>=77)return'B-';if(x>=73)return'C+';if(x>=69)return'C';if(x>=65)return'C-';if(x>=60)return'D';return'F'}
 function buildFeedback(aNames,bNames,a,b){let out=[];const all=[...aNames,...bNames];const known=all.filter(x=>seasonStats[x]);known.slice(0,4).forEach(x=>out.push('<b>'+x+'</b>: '+seasonStats[x]+'.'));if(Math.abs(a-b)<1e-8)out.push('This is essentially even under your custom model.');else{const win=a>b?'Team A':'Team B';out.push('<b>'+win+' has the advantage.</b> The model gives more weight to player value than raw ranking position, especially outside the top 30–40.')}const topA=aNames.slice().sort((x,y)=>tv(y)-tv(x))[0],topB=bNames.slice().sort((x,y)=>tv(y)-tv(x))[0];if(topA&&topB){const pa=byName(topA),pb=byName(topB);if(pa&&pb&&pa.value!=null&&pb.value!=null&&pa.value!==pb.value){const hi=pa.value>pb.value?topA:topB,lo=pa.value>pb.value?topB:topA;out.push(hi+' is listed at '+byName(hi).value+' versus '+lo+' at '+byName(lo).value+'.')}}return out.join(' ')}
-function gradeTrade(){const aNames=selected('A'),bNames=selected('B');if(!aNames.length||!bNames.length)return alert('Select players on both sides.');const a=totalNames(aNames),b=totalNames(bNames),m=Math.max(a,b),x=Math.round(a/m*100),y=Math.round(b/m*100);document.getElementById('ga').textContent=gr(x);document.getElementById('gb').textContent=gr(y);document.getElementById('va').textContent='Trade score: '+a.toFixed(1)+' · Listed value: '+aNames.reduce((s,n)=>s+(byName(n)?.value||0),0);document.getElementById('vb').textContent='Trade score: '+b.toFixed(1)+' · Listed value: '+bNames.reduce((s,n)=>s+(byName(n)?.value||0),0);const ratio=Math.min(a,b)/Math.max(a,b);let msg=ratio>=.96?'🤝 Very close trade':ratio>=.90?'⚖️ Competitive trade':ratio>=.82?'📈 Noticeable advantage':ratio>=.70?'⚠️ Significant advantage':'🚨 Major mismatch';if(Math.abs(a-b)<1e-8)msg='🤝 Essentially even!';else msg+=(a>b?' Team A has the advantage.':' Team B has the advantage.');document.getElementById('win').textContent=msg;document.getElementById('feedbackText').innerHTML=buildFeedback(aNames,bNames,a,b);document.getElementById('res').style.display='block'}
+function gradeTrade(){
+  const givingA=selected("A");
+  const givingB=selected("B");
+  if(!givingA.length || !givingB.length){
+    alert("Select at least one player on both sides.");
+    return;
+  }
+
+  // IMPORTANT: Team A's grade is based on what Team A RECEIVES,
+  // which is the package Team B is giving. Team B receives Team A's package.
+  const teamAGets=total("B");
+  const teamBGets=total("A");
+  const listedAGets=rawTotal("B");
+  const listedBGets=rawTotal("A");
+
+  const maxValue=Math.max(teamAGets,teamBGets);
+  const scoreA=maxValue ? Math.round(teamAGets/maxValue*100) : 100;
+  const scoreB=maxValue ? Math.round(teamBGets/maxValue*100) : 100;
+
+  ga.textContent=gr(scoreA);
+  gb.textContent=gr(scoreB);
+  va.textContent="Receives: "+teamAGets.toFixed(1)+" · Listed value: "+listedAGets;
+  vb.textContent="Receives: "+teamBGets.toFixed(1)+" · Listed value: "+listedBGets;
+
+  const ratio=maxValue ? Math.min(teamAGets,teamBGets)/maxValue : 1;
+  let message;
+  if(ratio>=0.96) message="🤝 Very close trade";
+  else if(ratio>=0.90) message="⚖️ Competitive trade";
+  else if(ratio>=0.82) message="📈 Noticeable advantage";
+  else if(ratio>=0.70) message="⚠️ Significant advantage";
+  else message="🚨 Major mismatch";
+
+  if(Math.abs(teamAGets-teamBGets)<0.0001){
+    message="🤝 Essentially even!";
+  }else if(teamAGets>teamBGets){
+    message+=" Team A wins the trade because Team A receives more value.";
+  }else{
+    message+=" Team B wins the trade because Team B receives more value.";
+  }
+
+  const winEl=document.getElementById("win");
+  if(winEl) winEl.textContent=message;
+
+  const fb=document.getElementById("feedbackText");
+  if(fb){
+    const winner=teamAGets>teamBGets?"Team A":"Team B";
+    const loser=teamAGets>teamBGets?"Team B":"Team A";
+    fb.textContent=winner+" wins because it receives the higher trade-model value. "+loser+" gives up more value than it receives.";
+  }
+
+  res.style.display="block";
+}
+window.gradeTrade=gradeTrade;
+
 function renderRankings(){let q=n(document.getElementById('rs').value),f=P.filter(p=>(filter==='ALL'||p.position===filter)&&(!q||n(p.player_name).includes(q))),g={};f.forEach(p=>(g[p.position]??=[]).push(p));document.getElementById('list').innerHTML=['QB','RB','WR','TE','D/ST','K'].filter(x=>g[x]).map(x=>'<div class="box" style="margin-bottom:12px"><div class="head">'+x+'</div>'+g[x].map((p,i)=>'<div class="row clickable" data-profile="'+i+'" data-pos="'+x+'"><span>#'+p.rank+'</span><span>'+p.player_name+'</span><b>'+(p.value==null?'—':p.value)+'</b></div>').join('')+'</div>').join('');document.querySelectorAll('#list [data-profile]').forEach(el=>el.onclick=()=>{let pos=el.dataset.pos,idx=+el.dataset.profile;let arr=P.filter(p=>p.position===pos&&(!q||n(p.player_name).includes(q)));if(arr[idx])openProfile(arr[idx].player_name)})}
 function setupFilters(){const fs=document.getElementById('fs');['ALL','QB','RB','WR','TE','D/ST','K'].forEach(x=>{let b=document.createElement('button');b.textContent=x;if(x==='ALL')b.className='active';b.onclick=()=>{filter=x;document.querySelectorAll('#fs button').forEach(z=>z.classList.remove('active'));b.classList.add('active');renderRankings()};fs.appendChild(b)})}
 function setupCompare(){searchBox('cmpA');searchBox('cmpB');}
