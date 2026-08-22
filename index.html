@@ -64,46 +64,172 @@ function renderWilling(){
 function findTrades(){
   const need=[...document.querySelectorAll('#needPositions [data-pos].active')].map(x=>x.dataset.pos);
   const willing=selected('willing');
-  const out=document.getElementById('finderResults'); if(!out)return;
-  if(!need.length){out.innerHTML='<div class="msg">Choose at least one position you need.</div>';return;}
-  if(!willing.length){out.innerHTML='<div class="msg">Search for and select at least one player you are willing to trade.</div>';return;}
+  const out=document.getElementById('finderResults');
+  if(!out)return;
 
-  const give=totalNames(willing);
-  const candidates=P.filter(p=>p.value!=null&&!willing.some(w=>n(w)===n(p.player_name)));
+  if(!need.length){out.innerHTML='<div class="msg">Choose at least one position you need.</div>';return;}
+  if(!willing.length){out.innerHTML='<div class="msg">Select at least one player you are willing to trade.</div>';return;}
+
+  const givePlayers=willing.map(byName).filter(Boolean);
+  if(!givePlayers.length){out.innerHTML='<div class="msg">Select a valid player to trade.</div>';return;}
+
+  const give=givePlayers.reduce((sum,p)=>sum+(Number(p.value)||0),0);
+  const highestGive=Math.max(...givePlayers.map(p=>Number(p.value)||0));
+  const primaryNeed=need[0];
+
+  // Keep the search fast and realistic: candidates are selected from around
+  // the outgoing value rather than generating hundreds of thousands of random
+  // combinations from the entire player pool.
+  const candidates=P.filter(p=>p.value!=null&&!willing.some(w=>n(w)===n(p.player_name)))
+    .sort((a,b)=>Math.abs((Number(a.value)||0)-highestGive)-Math.abs((Number(b.value)||0)-highestGive));
+
+  const needCandidates=candidates.filter(p=>need.includes(p.position));
+  const otherCandidates=candidates.filter(p=>!need.includes(p.position));
+
+  // Enough candidates for variety without making the browser freeze.
+  const pool=[];
+  needCandidates.slice(0,18).forEach(p=>pool.push(p));
+  otherCandidates.slice(0,18).forEach(p=>pool.push(p));
+
+  // Add a few high-value and lower-value options to make packages more creative.
+  candidates.slice(0,12).forEach(p=>{if(!pool.includes(p))pool.push(p);});
+
+  function tier(v){
+    if(v>=95)return 5;
+    if(v>=90)return 4;
+    if(v>=85)return 3;
+    if(v>=80)return 2;
+    if(v>=70)return 1;
+    return 0;
+  }
+
+  function packageScore(pkg){
+    const vals=pkg.map(p=>Number(p.value)||0);
+    const highestGet=Math.max(...vals);
+    const rawReturn=vals.reduce((a,b)=>a+b,0);
+    const needHits=pkg.filter(p=>need.includes(p.position)).length;
+    if(!needHits)return null;
+
+    // Only one TE is ever allowed in a package.
+    const teCount=pkg.filter(p=>p.position==='TE').length;
+    if(teCount>1)return null;
+
+    const counts={};
+    pkg.forEach(p=>counts[p.position]=(counts[p.position]||0)+1);
+    const distinctPositions=Object.keys(counts).length;
+
+    // Fantasy managers usually expect to receive LESS total value than
+    // the player/package they are giving up. This deliberately makes the
+    // Finder conservative instead of constantly trying to "win" the trade.
+    //
+    // 1-for-1: target ~88% of outgoing value
+    // 1-for-2: target ~78%
+    // 1-for-3: target ~70%
+    const targetMultiplier=pkg.length===1?0.88:pkg.length===2?0.78:0.70;
+    const targetReturn=give*targetMultiplier;
+
+    // Score distance from the conservative target, rather than distance
+    // from equal value.
+    const targetDistance=Math.abs(rawReturn-targetReturn)/(Math.max(give,1));
+    let score=targetDistance*100;
+
+    // Strongly punish returns that get too close to or exceed what was given.
+    // This is the main realism change requested.
+    if(rawReturn>give*0.95)score+=30;
+    if(rawReturn>give)score+=60;
+    if(rawReturn>give*1.10)score+=100;
+
+    // Keep the best incoming player reasonably close to the outgoing tier,
+    // without requiring a perfect 1-for-1.
+    score+=Math.abs(tier(highestGive)-tier(highestGet))*10;
+
+    // Multiple high-value pieces should be rare.
+    score+=vals.filter(v=>v>highestGive+5).length*30;
+
+    // Strongly prioritize the position the user actually needs.
+    score-=needHits*28;
+    if(pkg.some(p=>p.position===primaryNeed))score-=12;
+
+    // Variety is encouraged, not required.
+    if(pkg.length===2&&distinctPositions===2)score-=6;
+    if(pkg.length===3&&distinctPositions===2)score-=8;
+    if(pkg.length===3&&distinctPositions===3)score-=9;
+
+    // Multiple RBs or WRs remain completely legal.
+    // Three players all at the requested position are simply less preferred.
+    if(pkg.length===3&&counts[primaryNeed]===3)score+=15;
+
+    if(teCount===1&&!need.includes('TE'))score+=5;
+    if(pkg.length===2)score+=4;
+    if(pkg.length===3)score+=9;
+
+    return {score,rawReturn,effectiveReturn:rawReturn,needHits};
+  }
+
   const scored=[];
-  for(let i=0;i<candidates.length;i++){
-    for(let j=i;j<candidates.length;j++){
-      const pkg=j===i?[candidates[i]]:[candidates[i],candidates[j]];
-      const hits=pkg.filter(p=>need.includes(p.position)).length;
-      if(!hits)continue;
-      // Avoid boring same-position packages when another position can balance it.
-      const positions=new Set(pkg.map(p=>p.position));
-      if(pkg.length===2 && positions.size===1 && need.includes(pkg[0].position))continue;
-      const got=totalNames(pkg.map(p=>p.player_name));
-      const balance=Math.abs(give-got)/(Math.max(give,got)||1);
-      const diversityBonus=positions.size>1?5:0;
-      const score=balance*100-hits*20-diversityBonus;
-      scored.push({pkg,score});
+
+  // 1-player returns.
+  pool.forEach(p=>{
+    const s=packageScore([p]);
+    if(s)scored.push({pkg:[p],...s});
+  });
+
+  // 2- and 3-player returns, with a small candidate pool to keep the page responsive.
+  for(let i=0;i<pool.length;i++){
+    for(let j=i+1;j<pool.length;j++){
+      const p2=[pool[i],pool[j]];
+      const s2=packageScore(p2);
+      if(s2)scored.push({pkg:p2,...s2});
+
+      for(let k=j+1;k<pool.length;k++){
+        const p3=[pool[i],pool[j],pool[k]];
+        const s3=packageScore(p3);
+        if(s3)scored.push({pkg:p3,...s3});
+      }
     }
   }
+
   scored.sort((a,b)=>a.score-b.score);
-  const results=[],seen=new Set();
+
+  const results=[],seen=new Set(),sizeCounts={1:0,2:0,3:0},compositions=new Set();
+
   for(const x of scored){
     const key=x.pkg.map(p=>p.player_name).sort().join('|');
     if(seen.has(key))continue;
-    seen.add(key);results.push(x.pkg);
+
+    const composition=x.pkg.map(p=>p.position).sort().join('+');
+
+    // Avoid six nearly identical recommendations, while still allowing
+    // multiple RBs or multiple WRs when they are genuinely competitive.
+    if(compositions.has(composition)&&results.length<4)continue;
+    if(sizeCounts[x.pkg.length]>=3)continue;
+
+    seen.add(key);
+    compositions.add(composition);
+    sizeCounts[x.pkg.length]++;
+    results.push(x);
+
     if(results.length>=6)break;
   }
-  if(!results.length){out.innerHTML='<div class="msg">No realistic package found. Try another need or trade-away player.</div>';return;}
-  out.innerHTML='<h3>Recommended Trades</h3>'+results.map((pkg,i)=>
-    '<div class="finderCard '+(i===0?'best':'')+'">'+
-    '<b>Option '+(i+1)+'</b>'+
-    '<div class="tradeLine"><span>You give</span><b>'+willing.join(', ')+'</b></div>'+
-    '<div class="tradeLine"><span>You receive</span><b>'+pkg.map(p=>p.player_name+' ('+p.position+' · '+p.value+')').join(', ')+'</b></div>'+
-    '<div class="msg">Addresses: '+pkg.filter(p=>need.includes(p.position)).map(p=>p.position).join(', ')+'</div>'+
-    '</div>'
-  ).join('');
+
+  if(!results.length){
+    out.innerHTML='<div class="msg">No realistic package found. Try another player or position.</div>';
+    return;
+  }
+
+  out.innerHTML='<h3>Recommended Trades</h3>'+results.map((x,i)=>{
+    const main=x.pkg.filter(p=>p.position===primaryNeed).map(p=>p.player_name).join(', ');
+    const label=x.pkg.length===1?'1-for-1':x.pkg.length===2?'1-for-2':'1-for-3';
+    return '<div class="finderCard '+(i===0?'best':'')+'">'+
+      '<b>'+(i===0?'⭐ Most Realistic':'Option '+(i+1))+' · '+label+'</b>'+
+      '<div class="tradeLine"><span>You give</span><b>'+willing.join(', ')+'</b></div>'+
+      '<div class="tradeLine"><span>You receive</span><b>'+x.pkg.map(p=>p.player_name+' ('+p.position+' · '+p.value+')').join(', ')+'</b></div>'+
+      '<div class="msg"><b>Main need:</b> '+primaryNeed+(main?' → '+main:'')+
+      ' · Package value: '+x.rawReturn.toFixed(1)+
+      ' · Realism prioritized over maximizing return</div></div>';
+  }).join('');
 }
+
 window.findTrades=findTrades;
 
 function rankInfluence(rank){if(rank<=10)return 0.0035;if(rank<=20)return 0.0025;if(rank<=30)return 0.0015;if(rank<=40)return 0.0007;return 0.00025}
